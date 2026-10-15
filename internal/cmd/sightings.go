@@ -56,7 +56,7 @@ func sightingsCmd(app *app) *cli.Command {
 							{Key: "Reference", Value: s.ReferenceURL},
 						}},
 						view.Text{Title: "Remarks", Body: s.Remarks},
-						view.List{Title: fmt.Sprintf("Media (%d)", len(s.Media)), Items: view.MediaItems(s.Media)},
+						// view.List{Title: fmt.Sprintf("Media (%d)", len(s.Media)), Items: view.MediaItems(s.Media)},
 						view.Hintf("%s workshop species find %d", styles.IconArrow, s.Species.GBIFKey),
 					)
 					return nil

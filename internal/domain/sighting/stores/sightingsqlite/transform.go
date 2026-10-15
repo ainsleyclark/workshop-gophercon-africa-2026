@@ -32,6 +32,7 @@ func transform(row db.SightingListRow) (sighting.Sighting, error) {
 		IndividualCount: r.IndividualCount,
 		Remarks:         r.Remarks,
 		ReferenceURL:    r.ReferenceUrl,
+		IUCNCategory:    r.IucnCategory,
 		Location: sighting.Location{
 			Locality:      r.Locality,
 			StateProvince: r.StateProvince,
@@ -124,5 +125,6 @@ func toSightingCreateParams(id uuid.UUID, in sighting.CreateParams) (db.Sighting
 		SpeciesID:                     in.SpeciesID,
 		WeatherID:                     in.WeatherID,
 		Media:                         media,
+		IucnCategory:                  in.IUCNCategory,
 	}, nil
 }

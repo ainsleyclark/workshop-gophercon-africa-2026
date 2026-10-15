@@ -33,8 +33,9 @@ INSERT INTO sightings (
 	elevation_in_metres,
 	species_id,
 	weather_id,
-	media
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at, gbif_key, occurrence_id, happened_at, basis_of_record, recorded_by, individual_count, remarks, reference_url, locality, state_province, country, country_code, latitude, longitude, coordinate_uncertainty_in_metres, elevation_in_metres, species_id, weather_id, media
+	media,
+	iucn_category
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, created_at, updated_at, gbif_key, occurrence_id, happened_at, basis_of_record, recorded_by, individual_count, remarks, reference_url, locality, state_province, country, country_code, latitude, longitude, coordinate_uncertainty_in_metres, elevation_in_metres, species_id, weather_id, media, iucn_category
 `
 
 type SightingCreateParams struct {
@@ -58,6 +59,7 @@ type SightingCreateParams struct {
 	SpeciesID                     uuid.UUID `db:"species_id" json:"species_id"`
 	WeatherID                     uuid.UUID `db:"weather_id" json:"weather_id"`
 	Media                         string    `db:"media" json:"media"`
+	IucnCategory                  string    `db:"iucn_category" json:"iucn_category"`
 }
 
 func (q *Queries) SightingCreate(ctx context.Context, arg SightingCreateParams) (Sighting, error) {
@@ -82,6 +84,7 @@ func (q *Queries) SightingCreate(ctx context.Context, arg SightingCreateParams) 
 		arg.SpeciesID,
 		arg.WeatherID,
 		arg.Media,
+		arg.IucnCategory,
 	)
 	var i Sighting
 	err := row.Scan(
@@ -107,12 +110,13 @@ func (q *Queries) SightingCreate(ctx context.Context, arg SightingCreateParams) 
 		&i.SpeciesID,
 		&i.WeatherID,
 		&i.Media,
+		&i.IucnCategory,
 	)
 	return i, err
 }
 
 const sightingFind = `-- name: SightingFind :one
-SELECT sightings.id, sightings.created_at, sightings.updated_at, sightings.gbif_key, sightings.occurrence_id, sightings.happened_at, sightings.basis_of_record, sightings.recorded_by, sightings.individual_count, sightings.remarks, sightings.reference_url, sightings.locality, sightings.state_province, sightings.country, sightings.country_code, sightings.latitude, sightings.longitude, sightings.coordinate_uncertainty_in_metres, sightings.elevation_in_metres, sightings.species_id, sightings.weather_id, sightings.media, species.id, species.created_at, species.updated_at, species.gbif_key, species.kingdom, species.phylum, species.class, species."order", species.family, species.genus, species.species, species.rank, species.scientific_name, species.canonical_name, species.vernacular_name, weather.id, weather.created_at, weather.updated_at, weather.observed_at, weather.temperature, weather.apparent_temperature, weather.humidity, weather.precipitation, weather.rain, weather.snowfall, weather.cloud_cover, weather.wind_speed, weather.wind_gusts, weather.wind_direction, weather.condition_code, weather.condition
+SELECT sightings.id, sightings.created_at, sightings.updated_at, sightings.gbif_key, sightings.occurrence_id, sightings.happened_at, sightings.basis_of_record, sightings.recorded_by, sightings.individual_count, sightings.remarks, sightings.reference_url, sightings.locality, sightings.state_province, sightings.country, sightings.country_code, sightings.latitude, sightings.longitude, sightings.coordinate_uncertainty_in_metres, sightings.elevation_in_metres, sightings.species_id, sightings.weather_id, sightings.media, sightings.iucn_category, species.id, species.created_at, species.updated_at, species.gbif_key, species.kingdom, species.phylum, species.class, species."order", species.family, species.genus, species.species, species.rank, species.scientific_name, species.canonical_name, species.vernacular_name, weather.id, weather.created_at, weather.updated_at, weather.observed_at, weather.temperature, weather.apparent_temperature, weather.humidity, weather.precipitation, weather.rain, weather.snowfall, weather.cloud_cover, weather.wind_speed, weather.wind_gusts, weather.wind_direction, weather.condition_code, weather.condition
 FROM sightings
 	JOIN species ON species.id = sightings.species_id
 	JOIN weather ON weather.id = sightings.weather_id
@@ -151,6 +155,7 @@ func (q *Queries) SightingFind(ctx context.Context, id uuid.UUID) (SightingFindR
 		&i.Sighting.SpeciesID,
 		&i.Sighting.WeatherID,
 		&i.Sighting.Media,
+		&i.Sighting.IucnCategory,
 		&i.Species.ID,
 		&i.Species.CreatedAt,
 		&i.Species.UpdatedAt,
@@ -187,7 +192,7 @@ func (q *Queries) SightingFind(ctx context.Context, id uuid.UUID) (SightingFindR
 }
 
 const sightingFindByGbifKey = `-- name: SightingFindByGbifKey :one
-SELECT sightings.id, sightings.created_at, sightings.updated_at, sightings.gbif_key, sightings.occurrence_id, sightings.happened_at, sightings.basis_of_record, sightings.recorded_by, sightings.individual_count, sightings.remarks, sightings.reference_url, sightings.locality, sightings.state_province, sightings.country, sightings.country_code, sightings.latitude, sightings.longitude, sightings.coordinate_uncertainty_in_metres, sightings.elevation_in_metres, sightings.species_id, sightings.weather_id, sightings.media, species.id, species.created_at, species.updated_at, species.gbif_key, species.kingdom, species.phylum, species.class, species."order", species.family, species.genus, species.species, species.rank, species.scientific_name, species.canonical_name, species.vernacular_name, weather.id, weather.created_at, weather.updated_at, weather.observed_at, weather.temperature, weather.apparent_temperature, weather.humidity, weather.precipitation, weather.rain, weather.snowfall, weather.cloud_cover, weather.wind_speed, weather.wind_gusts, weather.wind_direction, weather.condition_code, weather.condition
+SELECT sightings.id, sightings.created_at, sightings.updated_at, sightings.gbif_key, sightings.occurrence_id, sightings.happened_at, sightings.basis_of_record, sightings.recorded_by, sightings.individual_count, sightings.remarks, sightings.reference_url, sightings.locality, sightings.state_province, sightings.country, sightings.country_code, sightings.latitude, sightings.longitude, sightings.coordinate_uncertainty_in_metres, sightings.elevation_in_metres, sightings.species_id, sightings.weather_id, sightings.media, sightings.iucn_category, species.id, species.created_at, species.updated_at, species.gbif_key, species.kingdom, species.phylum, species.class, species."order", species.family, species.genus, species.species, species.rank, species.scientific_name, species.canonical_name, species.vernacular_name, weather.id, weather.created_at, weather.updated_at, weather.observed_at, weather.temperature, weather.apparent_temperature, weather.humidity, weather.precipitation, weather.rain, weather.snowfall, weather.cloud_cover, weather.wind_speed, weather.wind_gusts, weather.wind_direction, weather.condition_code, weather.condition
 FROM sightings
 	JOIN species ON species.id = sightings.species_id
 	JOIN weather ON weather.id = sightings.weather_id
@@ -226,6 +231,7 @@ func (q *Queries) SightingFindByGbifKey(ctx context.Context, gbifKey int64) (Sig
 		&i.Sighting.SpeciesID,
 		&i.Sighting.WeatherID,
 		&i.Sighting.Media,
+		&i.Sighting.IucnCategory,
 		&i.Species.ID,
 		&i.Species.CreatedAt,
 		&i.Species.UpdatedAt,
@@ -262,7 +268,7 @@ func (q *Queries) SightingFindByGbifKey(ctx context.Context, gbifKey int64) (Sig
 }
 
 const sightingList = `-- name: SightingList :many
-SELECT sightings.id, sightings.created_at, sightings.updated_at, sightings.gbif_key, sightings.occurrence_id, sightings.happened_at, sightings.basis_of_record, sightings.recorded_by, sightings.individual_count, sightings.remarks, sightings.reference_url, sightings.locality, sightings.state_province, sightings.country, sightings.country_code, sightings.latitude, sightings.longitude, sightings.coordinate_uncertainty_in_metres, sightings.elevation_in_metres, sightings.species_id, sightings.weather_id, sightings.media, species.id, species.created_at, species.updated_at, species.gbif_key, species.kingdom, species.phylum, species.class, species."order", species.family, species.genus, species.species, species.rank, species.scientific_name, species.canonical_name, species.vernacular_name, weather.id, weather.created_at, weather.updated_at, weather.observed_at, weather.temperature, weather.apparent_temperature, weather.humidity, weather.precipitation, weather.rain, weather.snowfall, weather.cloud_cover, weather.wind_speed, weather.wind_gusts, weather.wind_direction, weather.condition_code, weather.condition
+SELECT sightings.id, sightings.created_at, sightings.updated_at, sightings.gbif_key, sightings.occurrence_id, sightings.happened_at, sightings.basis_of_record, sightings.recorded_by, sightings.individual_count, sightings.remarks, sightings.reference_url, sightings.locality, sightings.state_province, sightings.country, sightings.country_code, sightings.latitude, sightings.longitude, sightings.coordinate_uncertainty_in_metres, sightings.elevation_in_metres, sightings.species_id, sightings.weather_id, sightings.media, sightings.iucn_category, species.id, species.created_at, species.updated_at, species.gbif_key, species.kingdom, species.phylum, species.class, species."order", species.family, species.genus, species.species, species.rank, species.scientific_name, species.canonical_name, species.vernacular_name, weather.id, weather.created_at, weather.updated_at, weather.observed_at, weather.temperature, weather.apparent_temperature, weather.humidity, weather.precipitation, weather.rain, weather.snowfall, weather.cloud_cover, weather.wind_speed, weather.wind_gusts, weather.wind_direction, weather.condition_code, weather.condition
 FROM sightings
 	JOIN species ON species.id = sightings.species_id
 	JOIN weather ON weather.id = sightings.weather_id
@@ -328,6 +334,7 @@ func (q *Queries) SightingList(ctx context.Context, arg SightingListParams) ([]S
 			&i.Sighting.SpeciesID,
 			&i.Sighting.WeatherID,
 			&i.Sighting.Media,
+			&i.Sighting.IucnCategory,
 			&i.Species.ID,
 			&i.Species.CreatedAt,
 			&i.Species.UpdatedAt,

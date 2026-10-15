@@ -9,6 +9,8 @@ import (
 	"workshop/internal/clients/openmeteo"
 	"workshop/internal/common/logs"
 	"workshop/internal/common/printer"
+	"workshop/internal/domain/atlas"
+	"workshop/internal/domain/atlas/stores/atlassqlite"
 	"workshop/internal/domain/sighting"
 	"workshop/internal/domain/sighting/stores/sightingsqlite"
 	"workshop/internal/domain/species"
@@ -33,6 +35,7 @@ type app struct {
 	Sightings  *sighting.Service
 	Species    *species.Service
 	Weather    *weather.Service
+	Atlas      *atlas.Service
 
 	// live is set by --live, when GBIF and Open-Meteo are the real APIs
 	// rather than the local mock.
@@ -96,6 +99,7 @@ func bootstrap(ctx context.Context, cfg config.Config, level slog.Level, live bo
 		Sightings:  sightingSvc,
 		Species:    speciesSvc,
 		Weather:    weatherSvc,
+		Atlas:      atlas.NewService(logger, atlassqlite.New(queries)),
 		live:       live,
 	}, teardown, nil
 }

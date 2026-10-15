@@ -11,6 +11,19 @@ import (
 )
 
 type Querier interface {
+	AtlasIUCNCategories(ctx context.Context, countryCode string) ([]string, error)
+	// Totals over every sighting of a species in a country, however many
+	// AtlasObservations returns.
+	AtlasObservationSummary(ctx context.Context, arg AtlasObservationSummaryParams) (AtlasObservationSummaryRow, error)
+	// Every sighting of a species in a country, newest first.
+	AtlasObservations(ctx context.Context, arg AtlasObservationsParams) ([]Sighting, error)
+	AtlasSpeciesFind(ctx context.Context, gbifKey int64) (Species, error)
+	// One row per species seen in a country, with how often and when it was
+	// last seen, its IUCN category and the newest photo of it there.
+	AtlasSpeciesList(ctx context.Context, arg AtlasSpeciesListParams) ([]AtlasSpeciesListRow, error)
+	// The class, order and family of every species seen in a country, for
+	// building the filters.
+	AtlasTaxa(ctx context.Context, countryCode string) ([]AtlasTaxaRow, error)
 	SightingCreate(ctx context.Context, arg SightingCreateParams) (Sighting, error)
 	SightingFind(ctx context.Context, id uuid.UUID) (SightingFindRow, error)
 	SightingFindByGbifKey(ctx context.Context, gbifKey int64) (SightingFindByGbifKeyRow, error)

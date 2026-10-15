@@ -1,0 +1,118 @@
+package components
+
+import "workshop/web/views/vm"
+
+// Stats is a row of figures about a species.
+templ Stats(stats []vm.Stat) {
+	<dl class="stats">
+		for _, s := range stats {
+			<div class="stats__item">
+				<dt>{ s.Label }</dt>
+				<dd>{ s.Value }</dd>
+			</div>
+		}
+	</dl>
+}
+
+// Taxonomy is a species' classification, read top to bottom like the
+// hero's counter.
+templ Taxonomy(ranks []vm.Rank) {
+	<ol class="taxonomy">
+		for i, r := range ranks {
+			<li class={ "taxonomy__rank", templ.KV("is-last", i == len(ranks)-1) }>
+				<span class="taxonomy__number" aria-hidden="true">{ vm.Number(i + 1) }</span>
+				<span class="taxonomy__label">{ r.Label }</span>
+				<span class="taxonomy__value">{ r.Value }</span>
+			</li>
+		}
+	</ol>
+}
+
+// ObservationMap plots the sightings with Leaflet. The points travel as
+// JSON beside it; without JavaScript, or until Leaflet loads, the box
+// says where to find the same records as a list.
+templ ObservationMap(points []vm.MapPoint) {
+	<div class="map" data-map="map-points" role="region" aria-label="Map of sightings">
+		<p class="map__fallback">
+			The map needs JavaScript. Every sighting is also listed under
+			<a href="#observations">Recent sightings</a>.
+		</p>
+	</div>
+	@templ.JSONScript("map-points", points)
+}
+
+// Gallery is the photographs taken of a species, each credited.
+templ Gallery(photos []vm.Photo, name string) {
+	<ul class="gallery">
+		for _, p := range photos {
+			<li>
+				<figure class="gallery__item">
+					<a href={ templ.URL(p.Large) } rel="noopener">
+						@Photo(PhotoProps{Photo: p, Name: name})
+						<span class="sr-only">Open full size</span>
+					</a>
+					<figcaption>
+						@Credit(p)
+					</figcaption>
+				</figure>
+			</li>
+		}
+	</ul>
+}
+
+// FieldNotes are the remarks observers left with their sightings.
+templ FieldNotes(notes []vm.Note) {
+	<div class="notes">
+		for _, n := range notes {
+			<figure class="note">
+				<blockquote>{ n.Text }</blockquote>
+				if n.Byline != "" {
+					<figcaption>{ n.Byline }</figcaption>
+				}
+			</figure>
+		}
+	</div>
+}
+
+// Observations is a table of a species' sightings, newest first.
+templ Observations(rows []vm.Observation, more int) {
+	<div class="table-wrap" tabindex="0" role="region" aria-label="Recent sightings table">
+		<table class="observations">
+			<thead>
+				<tr>
+					<th scope="col">Date</th>
+					<th scope="col">Place</th>
+					<th scope="col">Observer</th>
+					<th scope="col" class="num">Count</th>
+					<th scope="col"><span class="sr-only">Record</span></th>
+				</tr>
+			</thead>
+			<tbody>
+				for _, o := range rows {
+					<tr>
+						<td><time datetime={ o.ISODate }>{ o.Date }</time></td>
+						<td>{ o.Place }</td>
+						<td>{ o.Observer }</td>
+						<td class="num">
+							if o.Count != "" {
+								{ o.Count }
+							} else {
+								<span aria-label="not recorded">–</span>
+							}
+						</td>
+						<td>
+							<a class="observations__link" href={ templ.URL(o.SourceURL) } rel="noopener">
+								GBIF
+								<span class="sr-only">record of the sighting on { o.Date }</span>
+								@Icon("external")
+							</a>
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	</div>
+	if more > 0 {
+		<p class="observations__more">And { vm.Count(more) } earlier sightings. The map shows up to the 500 most recent.</p>
+	}
+}

@@ -1,0 +1,171 @@
+package components
+
+import "workshop/web/views/vm"
+
+// The ids HTMX swaps by, shared by the handlers.
+const (
+	ResultsID  = "results"
+	GridID     = "grid"
+	LoadMoreID = "load-more"
+	SummaryID  = "results-summary"
+)
+
+// FilterBar is the search and filter form. It submits as an ordinary
+// GET without JavaScript; with HTMX each control refreshes the results
+// as it changes, the search box once typing pauses.
+templ FilterBar(f vm.Filters) {
+	<form
+		id="filters"
+		class="filters"
+		action="/species"
+		method="get"
+		role="search"
+		aria-label="Search and filter species"
+		hx-get="/species"
+		hx-trigger="submit"
+		hx-target={ "#" + ResultsID }
+		hx-include="#filters"
+		hx-push-url="true"
+		hx-indicator={ "#" + ResultsID }
+		hx-sync="this:replace"
+	>
+		<div class="filters__search">
+			<label for="q" class="sr-only">Search by common or scientific name</label>
+			@Icon("search")
+			<input
+				id="q"
+				name="q"
+				type="search"
+				value={ f.Query }
+				placeholder="Search by name: hippo, Crocuta…"
+				autocomplete="off"
+				spellcheck="false"
+				hx-get="/species"
+				hx-trigger="input changed delay:350ms, search"
+			/>
+		</div>
+		@FilterSelect("class", "Class", "All classes", f.Classes, false)
+		@FilterSelect("order", "Order", "All orders", f.Orders, false)
+		@FilterSelect("family", "Family", "All families", f.Families, false)
+		@FilterSelect("iucn", "IUCN status", "Any status", f.IUCN, false)
+		<div class="filters__actions">
+			<button class="pill pill--dark filters__submit" type="submit">Apply</button>
+			if f.Active {
+				<a class="filters__clear" href="/species">Clear filters</a>
+			}
+		</div>
+	</form>
+}
+
+// FilterSelect is one of the filter's drop-downs. With oob it is sent
+// alongside new results to replace the one on the page, so its choices
+// follow the class and order chosen.
+templ FilterSelect(name, label, all string, opts []vm.Option, oob bool) {
+	<div
+		class="filters__field"
+		id={ "field-" + name }
+		if oob {
+			hx-swap-oob="true"
+		}
+	>
+		<label for={ "f-" + name }>{ label }</label>
+		<select id={ "f-" + name } name={ name } hx-get="/species" hx-trigger="change">
+			<option value="">{ all }</option>
+			for _, o := range opts {
+				<option value={ o.Value } selected?={ o.Selected }>{ o.Label }</option>
+			}
+		</select>
+	</div>
+}
+
+// Results is the grid and everything about it that changes with the
+// filters: a summary read out to screen readers, the cards, and the
+// link to more.
+templ Results(r vm.Results) {
+	<p id={ SummaryID } class="results__summary" role="status">{ r.Summary }</p>
+	if len(r.Cards) == 0 {
+		@EmptyState(r.Filtered)
+	} else {
+		<ol id={ GridID } class="grid">
+			@ResultCards(r)
+		</ol>
+	}
+	@LoadMore(r.NextHref)
+	<div class="results__loading" aria-hidden="true">
+		for range 3 {
+			@CardSkeleton()
+		}
+	</div>
+}
+
+// ResultCards is the cards alone, which "load more" appends.
+templ ResultCards(r vm.Results) {
+	for i, c := range r.Cards {
+		<li>
+			@SpeciesCard(c, r.FirstNumber+i)
+		</li>
+	}
+}
+
+// MoreResults answers "load more": the next cards, with the summary and
+// the link replaced out of band.
+templ MoreResults(r vm.Results) {
+	@ResultCards(r)
+	<p id={ SummaryID } class="results__summary" role="status" hx-swap-oob="true">{ r.Summary }</p>
+	@loadMore(r.NextHref, true)
+}
+
+templ LoadMore(href string) {
+	@loadMore(href, false)
+}
+
+templ loadMore(href string, oob bool) {
+	<div
+		id={ LoadMoreID }
+		class="load-more"
+		if oob {
+			hx-swap-oob="true"
+		}
+	>
+		if href != "" {
+			<a
+				class="pill pill--ghost"
+				href={ templ.URL(href) }
+				hx-get={ href + "&fragment=cards" }
+				hx-target={ "#" + GridID }
+				hx-swap="beforeend"
+			>
+				<span class="load-more__label">Load more species</span>
+				<span class="load-more__busy">Tracking…</span>
+			</a>
+		}
+	</div>
+}
+
+// EmptyState is shown when nothing matches.
+templ EmptyState(filtered bool) {
+	<div class="state state--empty">
+		<svg class="state__art" viewBox="0 0 120 60" aria-hidden="true" focusable="false">
+			<path d="M4 48c18-2 30-14 56-14s38 12 56 14" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+			<circle cx="60" cy="24" r="10" fill="var(--amber)" opacity=".7"></circle>
+			<path d="M30 48c0-6 4-9 8-9M84 48c0-5 3-8 7-8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+		</svg>
+		if filtered {
+			<h3 class="state__title">Nothing on the trail</h3>
+			<p>No species seen here match those filters. Try a broader name, or clear a filter.</p>
+			@PillButton(ButtonProps{Href: "/species", Label: "Clear filters", Variant: "dark"})
+		} else {
+			<h3 class="state__title">The plains are quiet</h3>
+			<p>No sightings have been ingested for this country yet. Run <code>go run . sightings ingest -c KE</code> to fetch some from GBIF.</p>
+		}
+	</div>
+}
+
+// ErrorState is shown in place of results that couldn't be loaded.
+templ ErrorState(message string) {
+	<div class="state state--error" role="alert">
+		<h3 class="state__title">The track went cold</h3>
+		<p>{ message }</p>
+		@PillButton(ButtonProps{Href: "/species", Label: "Try again", Variant: "dark"})
+	</div>
+}

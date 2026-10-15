@@ -13,21 +13,24 @@ type (
 	// Sighting represents an individual sighting of a species.
 	// It's a record of a specific observation at a particular location and time.
 	Sighting struct {
-		ID              uuid.UUID       `json:"id"`
-		GBIFKey         int64           `json:"gbifKey"`
-		OccurrenceID    string          `json:"occurrenceID,omitzero"`
-		HappenedAt      time.Time       `json:"happenedAt"`
-		BasisOfRecord   string          `json:"basisOfRecord,omitzero"`
-		RecordedBy      string          `json:"recordedBy,omitzero"`
-		IndividualCount *int            `json:"individualCount,omitzero"`
-		Remarks         string          `json:"remarks,omitzero"`
-		ReferenceURL    string          `json:"referenceURL,omitzero"`
-		Location        Location        `json:"location"`
-		Species         species.Species `json:"species"`
-		Weather         weather.Weather `json:"weather"`
-		Media           []Media         `json:"media,omitzero"`
-		CreatedAt       time.Time       `json:"createdAt"`
-		UpdatedAt       time.Time       `json:"updatedAt"`
+		ID              uuid.UUID `json:"id"`
+		GBIFKey         int64     `json:"gbifKey"`
+		OccurrenceID    string    `json:"occurrenceID,omitzero"`
+		HappenedAt      time.Time `json:"happenedAt"`
+		BasisOfRecord   string    `json:"basisOfRecord,omitzero"`
+		RecordedBy      string    `json:"recordedBy,omitzero"`
+		IndividualCount *int      `json:"individualCount,omitzero"`
+		Remarks         string    `json:"remarks,omitzero"`
+		ReferenceURL    string    `json:"referenceURL,omitzero"`
+		// IUCNCategory is the IUCN Red List code GBIF gave the occurrence,
+		// such as "VU" or "LC", or empty when it gave none.
+		IUCNCategory string          `json:"iucnCategory,omitzero"`
+		Location     Location        `json:"location"`
+		Species      species.Species `json:"species"`
+		Weather      weather.Weather `json:"weather"`
+		Media        []Media         `json:"media,omitzero"`
+		CreatedAt    time.Time       `json:"createdAt"`
+		UpdatedAt    time.Time       `json:"updatedAt"`
 	}
 	// Location represents the geographical coordinates and other
 	// location-related information associated with a sighting.
@@ -60,6 +63,7 @@ type (
 		IndividualCount *int      `json:"individualCount,omitzero"`
 		Remarks         string    `json:"remarks,omitzero"`
 		ReferenceURL    string    `json:"referenceURL,omitzero"`
+		IUCNCategory    string    `json:"iucnCategory,omitzero"`
 		Location        Location  `json:"location"`
 		SpeciesID       uuid.UUID `json:"speciesID,omitzero"`
 		WeatherID       uuid.UUID `json:"weatherID,omitzero"`
@@ -93,6 +97,7 @@ func (s Sighting) CreateParams() CreateParams {
 		IndividualCount: s.IndividualCount,
 		Remarks:         s.Remarks,
 		ReferenceURL:    s.ReferenceURL,
+		IUCNCategory:    s.IUCNCategory,
 		Location:        s.Location,
 		SpeciesID:       s.Species.ID,
 		WeatherID:       s.Weather.ID,

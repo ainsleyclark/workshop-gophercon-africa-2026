@@ -2,14 +2,33 @@ package pages
 
 import (
 	"strconv"
+	"workshop/web/views/components"
 	"workshop/web/views/layout"
+	"workshop/web/views/vm"
 )
 
-templ Error(message string, code int) {
+templ Error(site vm.Site, message string, code int) {
 	@layout.Base(layout.BaseProps{
 		Title: "Error " + strconv.Itoa(code),
+		Site:  site,
 	}) {
-		<h1>{ strconv.Itoa(code) }</h1>
-		<p>{ message }</p>
+		<section class="error-page">
+			<p class="error-page__code display" aria-hidden="true">{ strconv.Itoa(code) }</p>
+			<div>
+				@components.Eyebrow("Error " + strconv.Itoa(code))
+				<h1 class="display error-page__title">
+					if code == 404 {
+						Lost the trail
+					} else {
+						Something spooked the herd
+					}
+				</h1>
+				<p class="error-page__text">{ message }</p>
+				<div class="hero__actions">
+					@components.PillButton(components.ButtonProps{Href: "/", Label: "Back to the atlas", Variant: "amber"})
+					@components.PillButton(components.ButtonProps{Href: "/species", Label: "All species", Variant: "dark"})
+				</div>
+			</div>
+		</section>
 	}
 }

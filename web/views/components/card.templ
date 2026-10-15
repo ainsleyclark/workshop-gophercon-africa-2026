@@ -1,0 +1,41 @@
+package components
+
+import "workshop/web/views/vm"
+
+// SpeciesCard is a species in the grid, numbered n.
+templ SpeciesCard(c vm.Card, n int) {
+	<article class="card">
+		<a class="card__link" href={ templ.URL(c.Href) }>
+			<div class="card__media">
+				@Photo(PhotoProps{Photo: c.Photo, Name: c.CommonName})
+				<span class="card__number" aria-hidden="true">{ vm.Number(n) }</span>
+			</div>
+			<div class="card__body">
+				if c.Family != "" {
+					<p class="eyebrow card__family">{ c.Family }</p>
+				}
+				<h3 class="card__title">{ c.CommonName }</h3>
+				<p class="card__sci">{ c.ScientificName }</p>
+			</div>
+		</a>
+		<footer class="card__meta">
+			<span>{ c.Sightings }</span>
+			if c.LastSeen != "" {
+				<span>Last seen <time>{ c.LastSeen }</time></span>
+			}
+			@IUCNBadge(c.IUCN)
+		</footer>
+	</article>
+}
+
+// CardSkeleton holds a card's place while the grid loads.
+templ CardSkeleton() {
+	<div class="card card--skeleton" aria-hidden="true">
+		<div class="card__media"><div class="photo"></div></div>
+		<div class="card__body">
+			<span class="skeleton-line skeleton-line--short"></span>
+			<span class="skeleton-line"></span>
+			<span class="skeleton-line skeleton-line--mid"></span>
+		</div>
+	</div>
+}

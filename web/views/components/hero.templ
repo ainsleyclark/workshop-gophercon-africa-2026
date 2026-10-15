@@ -1,0 +1,119 @@
+package components
+
+import (
+	"strconv"
+	"workshop/web/views/vm"
+)
+
+// Hero is the featured species, shown one at a time, with the rail of
+// thumbnails and a counter to move between them. Without JavaScript the
+// rail's links reload the page on the chosen species.
+templ Hero(h vm.Hero) {
+	<section id="hero" class="hero" aria-roledescription="carousel" aria-label="Featured species" data-hero>
+		for i, s := range h.Slides {
+			@heroSlide(s, i, len(h.Slides), i == h.Active)
+		}
+		if len(h.Slides) > 1 {
+			@heroRail(h)
+		}
+		<a class="hero__scroll" href="#browse">
+			<span>Browse the atlas</span>
+			<span class="hero__scroll-bar" aria-hidden="true"></span>
+		</a>
+	</section>
+}
+
+templ heroSlide(s vm.Slide, i, total int, active bool) {
+	<article
+		class="hero__slide"
+		id={ "slide-" + s.Number }
+		aria-roledescription="slide"
+		aria-label={ s.Number + " of " + vm.Number(total) + ": " + s.CommonName }
+		hidden?={ !active }
+		data-slide={ strconv.Itoa(i) }
+		data-backdrop={ s.Photo.Small }
+	>
+		<div class="hero__media">
+			@Photo(PhotoProps{Photo: s.Photo, Name: s.CommonName, Size: "large", Eager: active})
+		</div>
+		if s.Place != "" || s.Photo.Credit != "" {
+			<p class="hero__place">
+				if s.Place != "" {
+					<span class="hero__place-name">
+						<span>{ s.Place }</span>
+						<span class="hero__place-rule" aria-hidden="true"></span>
+						@Icon("pin")
+					</span>
+				}
+				if s.Photo.Credit != "" {
+					<span class="hero__photo-credit">Photo · { s.Photo.Credit }</span>
+				}
+			</p>
+		}
+		<div class="hero__copy">
+			if s.Kicker != "" {
+				<p class="hero__kicker">{ s.Kicker }</p>
+			}
+			<h2 class="hero__title display">{ s.CommonName }</h2>
+			<p class="eyebrow hero__sci">{ s.ScientificName }</p>
+			<p class="hero__lead">{ s.Lead }</p>
+			<div class="hero__actions">
+				@PillButton(ButtonProps{Href: s.Href, Label: "Explore", Variant: "amber"})
+				@PillButton(ButtonProps{Href: s.Href + "#map", Label: "Sightings map", Variant: "dark", Icon: "map"})
+			</div>
+		</div>
+		if s.IUCN.Code != "" {
+			<aside class="hero__note" aria-label="Conservation status">
+				<a class="hero__note-button" href={ templ.URL(s.Href) } aria-label={ "More about " + s.CommonName }>
+					@Icon("arrow")
+				</a>
+				<p>
+					<span class="hero__note-title">IUCN Red List</span>
+					<span>{ s.IUCN.Label } ({ s.IUCN.Code })</span>
+				</p>
+			</aside>
+		}
+	</article>
+}
+
+templ heroRail(h vm.Hero) {
+	<nav class="rail" aria-label="Choose a featured species">
+		<ol class="rail__thumbs">
+			for i, s := range h.Slides {
+				<li>
+					<a
+						class="rail__thumb"
+						href={ templ.URL(s.SelfHref) }
+						data-go={ strconv.Itoa(i) }
+						aria-controls={ "slide-" + s.Number }
+						if i == h.Active {
+							aria-current="true"
+						}
+					>
+						if s.Photo.Small != "" {
+							<img src={ s.Photo.Small } alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>
+						}
+						<span class="sr-only">{ s.Number }: { s.CommonName }</span>
+					</a>
+				</li>
+			}
+		</ol>
+		<div class="rail__counter">
+			<a class="rail__step" href={ templ.URL(h.Slides[wrap(h.Active-1, len(h.Slides))].SelfHref) } data-step="-1" aria-label="Previous species">
+				@Icon("up")
+			</a>
+			<ol class="rail__numbers" aria-hidden="true">
+				for i, s := range h.Slides {
+					<li class={ templ.KV("is-active", i == h.Active) } data-number={ strconv.Itoa(i) }>{ s.Number }</li>
+				}
+			</ol>
+			<a class="rail__step" href={ templ.URL(h.Slides[wrap(h.Active+1, len(h.Slides))].SelfHref) } data-step="1" aria-label="Next species">
+				@Icon("down")
+			</a>
+		</div>
+	</nav>
+}
+
+func wrap(i, n int) int {
+	return ((i % n) + n) % n
+}

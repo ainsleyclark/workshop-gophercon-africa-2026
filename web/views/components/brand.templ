@@ -1,0 +1,74 @@
+package components
+
+// Logo is the site mark: an acacia on the horizon under a low sun.
+templ Logo() {
+	<svg class="logo" viewBox="0 0 48 48" width="40" height="40" aria-hidden="true" focusable="false">
+		<circle cx="24" cy="22" r="11" fill="var(--amber)"></circle>
+		<path d="M7 36h34" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+		<path d="M23 36V25.5M25 36V25.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+		<path d="M12 24.5c3.5-3 8-3.6 12-3.6s8.5.6 12 3.6c-4 1.4-8 1.9-12 1.9s-8-.5-12-1.9Z" fill="currentColor"></path>
+	</svg>
+}
+
+// Icon draws one of the site's line icons. It is decorative: whatever
+// holds it carries the accessible name.
+templ Icon(name string) {
+	<svg class={ "icon", "icon--" + name } viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+		switch name {
+			case "pin":
+				<path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21Z"></path>
+				<circle cx="12" cy="9.8" r="2.3"></circle>
+			case "search":
+				<circle cx="10.5" cy="10.5" r="6.5"></circle>
+				<path d="m15.5 15.5 5 5"></path>
+			case "menu":
+				<path d="M4 7h16M4 12h16M10 17h10"></path>
+			case "up":
+				<path d="m6 15 6-6 6 6"></path>
+			case "down":
+				<path d="m6 9 6 6 6-6"></path>
+			case "arrow":
+				<path d="M5 12h14M13 6l6 6-6 6"></path>
+			case "map":
+				<path d="m9 4-5 2v14l5-2 6 2 5-2V4l-5 2-6-2Z"></path>
+				<path d="M9 4v14M15 6v14"></path>
+			case "external":
+				<path d="M14 4h6v6M20 4l-9 9"></path>
+				<path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"></path>
+			case "back":
+				<path d="M19 12H5M11 6l-6 6 6 6"></path>
+		}
+	</svg>
+}
+
+type ButtonProps struct {
+	Href  string
+	Label string
+	// Variant is "amber", "dark" or "ghost".
+	Variant  string
+	Icon     string
+	External bool
+}
+
+// PillButton is the site's ovoid button, a link styled as one.
+templ PillButton(p ButtonProps) {
+	<a
+		class={ "pill", "pill--" + p.Variant }
+		href={ templ.URL(p.Href) }
+		if p.External {
+			rel="noopener"
+		}
+	>
+		if p.Icon != "" {
+			<span class="pill__icon">
+				@Icon(p.Icon)
+			</span>
+		}
+		<span>{ p.Label }</span>
+	</a>
+}
+
+// Eyebrow is the small spaced capitals that sit above a heading.
+templ Eyebrow(text string) {
+	<p class="eyebrow">{ text }</p>
+}
