@@ -1,0 +1,61 @@
+package components
+
+import "workshop/internal/domain/sighting"
+
+type FilterProps struct {
+	Target string
+	Search bool
+	Groups []FilterGroup
+}
+
+type FilterGroup struct {
+	Key     string
+	Label   string
+	Options []sighting.Tally
+}
+
+templ Filter(props FilterProps) {
+	<form class="filter" data-filter={ props.Target } role="search" aria-label="Filter sightings" hidden>
+		<div class="filter__bar">
+			if props.Search {
+				<label class="filter__search">
+					@IconSearch()
+					<span class="visually-hidden">Search sightings</span>
+					<input type="search" name="q" placeholder="Search by animal, place or observer…" autocomplete="off"/>
+				</label>
+			}
+			<button class="filter__toggle button button--ghost" type="button" aria-expanded="false" data-filter-toggle>
+				@IconFilter()
+				Filters
+				<span class="filter__badge" data-filter-badge hidden></span>
+			</button>
+			<label class="filter__sort">
+				<span class="visually-hidden">Sort by</span>
+				<select name="sort">
+					<option value="newest">Newest first</option>
+					<option value="oldest">Oldest first</option>
+					<option value="name">A to Z</option>
+				</select>
+			</label>
+		</div>
+		<div class="filter__panel">
+		for _, g := range props.Groups {
+			<fieldset class="filter__group">
+				<legend>{ g.Label }</legend>
+				<div class="filter__chips">
+					for _, o := range g.Options {
+						<label class="chip">
+							<input type="checkbox" name={ g.Key } value={ o.Name }/>
+							{ o.Name } <small>{ o.Count }</small>
+						</label>
+					}
+				</div>
+			</fieldset>
+		}
+		</div>
+		<p class="filter__status">
+			<output class="filter__count" aria-live="polite"></output>
+			<button class="filter__clear" type="reset">Clear filters</button>
+		</p>
+	</form>
+}

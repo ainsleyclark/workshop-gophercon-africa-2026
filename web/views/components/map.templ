@@ -1,0 +1,26 @@
+package components
+
+import "cmp"
+
+type MapProps struct {
+	Points  []MapPoint
+	ID      string
+	Cluster bool
+	Label   string
+	Class   string
+	MaxZoom string
+}
+
+templ Map(props MapProps) {
+	<div
+		class={ "map", props.Class }
+		data-map={ cmp.Or(props.ID, "map-points") }
+		data-cluster?={ props.Cluster }
+		data-max-zoom={ cmp.Or(props.MaxZoom, "12") }
+		role="region"
+		aria-label={ cmp.Or(props.Label, "Map of sightings") }
+	>
+		<p class="map__fallback">The map needs JavaScript and a connection to load.</p>
+	</div>
+	@templ.JSONScript(cmp.Or(props.ID, "map-points"), props.Points)
+}

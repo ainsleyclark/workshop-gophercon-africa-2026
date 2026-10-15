@@ -1,0 +1,54 @@
+/* block: charts — copy to web/assets/css/charts.css. See charts.md. */
+
+/* Tune from the site's own tokens, on :root or on one chart:
+     --chart-line        the sparkline's stroke; the text colour by default
+     --chart-fill        the area under it
+     --chart-bar         the bars; a tint of the text colour by default
+     --chart-track       the empty part of a bar row
+     --sparkline-height  how tall the line is */
+
+.sparkline {
+	display: block;
+	width: 100%;
+	height: var(--sparkline-height, 4rem);
+	overflow: visible;
+}
+
+.sparkline__line {
+	fill: none;
+	stroke: var(--chart-line, currentColor);
+	stroke-width: 1.5;
+	stroke-linejoin: round;
+}
+
+.sparkline__fill {
+	fill: var(--chart-fill, currentColor);
+	opacity: 0.12;
+}
+
+.bars {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* One element per row: the bar is the background, stopping at --bar. */
+.bars__row {
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.4rem 0.75rem;
+	border-radius: 2px;
+	background: linear-gradient(
+		to right,
+		var(--chart-bar, color-mix(in srgb, currentColor 18%, transparent)) var(--bar, 0%),
+		var(--chart-track, transparent) var(--bar, 0%)
+	);
+	font-variant-numeric: tabular-nums;
+}
+
+.bars__count {
+	font-weight: 600;
+}
