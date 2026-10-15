@@ -1,0 +1,140 @@
+package pages
+
+import (
+	"workshop/internal/domain/species"
+	"workshop/web/views/components"
+	"workshop/web/views/layout"
+)
+
+type SightingFormValues struct {
+	SpeciesID       string
+	HappenedAt      string
+	RecordedBy      string
+	IndividualCount string
+	Locality        string
+	StateProvince   string
+	Country         string
+	CountryCode     string
+	Latitude        string
+	Longitude       string
+	PhotoURL        string
+	Remarks         string
+}
+
+type SightingFormProps struct {
+	Heading string
+	Intro   string
+	Action  string
+	Submit  string
+	Cancel  string
+	Current string
+	MaxDate string
+	Values  SightingFormValues
+	Species []species.Species
+	Errors  map[string]string
+	Problems []string
+}
+
+templ SightingForm(props SightingFormProps) {
+	@layout.Base(layout.BaseProps{
+		Title:   props.Heading,
+		Current: props.Current,
+	}) {
+		<div class="container page form-page">
+			<a class="back" href={ templ.URL(props.Cancel) }>
+				@components.IconArrowLeft()
+				Back
+			</a>
+			<h1>{ props.Heading }</h1>
+			<p>{ props.Intro }</p>
+			if len(props.Problems) > 0 || len(props.Errors) > 0 {
+				<div class="alert" role="alert">
+					<strong>Please check the form.</strong>
+					if len(props.Problems) > 0 {
+						<ul>
+							for _, p := range props.Problems {
+								<li>{ p }</li>
+							}
+						</ul>
+					}
+				</div>
+			}
+			<form class="form" method="post" action={ templ.URL(props.Action) } novalidate>
+				<fieldset class="fieldset">
+					<legend>The animal</legend>
+					@field(props, "species_id", "Species", "", true) {
+						<select class="input" id="species_id" name="species_id" required>
+							<option value="">Choose a species…</option>
+							for _, sp := range props.Species {
+								<option value={ sp.ID.String() } selected?={ sp.ID.String() == props.Values.SpeciesID }>
+									{ speciesLabel(sp) }
+								</option>
+							}
+						</select>
+					}
+					@field(props, "individual_count", "How many", "Optional", false) {
+						<input class="input" id="individual_count" name="individual_count" type="number" min="0" inputmode="numeric" value={ props.Values.IndividualCount }/>
+					}
+					@field(props, "happened_at", "When", "", false) {
+						<input class="input" id="happened_at" name="happened_at" type="datetime-local" required max={ props.MaxDate } value={ props.Values.HappenedAt }/>
+					}
+					@field(props, "recorded_by", "Recorded by", "Your name, or several separated by |", true) {
+						<input class="input" id="recorded_by" name="recorded_by" type="text" autocomplete="name" value={ props.Values.RecordedBy }/>
+					}
+				</fieldset>
+				<fieldset class="fieldset">
+					<legend>Where</legend>
+					@field(props, "locality", "Place", "A park, reserve or landmark", true) {
+						<input class="input" id="locality" name="locality" type="text" value={ props.Values.Locality }/>
+					}
+					@field(props, "state_province", "Region", "Optional", false) {
+						<input class="input" id="state_province" name="state_province" type="text" value={ props.Values.StateProvince }/>
+					}
+					@field(props, "country", "Country", "", false) {
+						<input class="input" id="country" name="country" type="text" autocomplete="country-name" value={ props.Values.Country }/>
+					}
+					@field(props, "country_code", "Country code", "Two letters, such as KE", false) {
+						<input class="input" id="country_code" name="country_code" type="text" maxlength="2" autocomplete="country" value={ props.Values.CountryCode }/>
+					}
+					@field(props, "latitude", "Latitude", "Between -90 and 90", false) {
+						<input class="input" id="latitude" name="latitude" type="number" step="any" min="-90" max="90" required value={ props.Values.Latitude }/>
+					}
+					@field(props, "longitude", "Longitude", "Between -180 and 180", false) {
+						<input class="input" id="longitude" name="longitude" type="number" step="any" min="-180" max="180" required value={ props.Values.Longitude }/>
+					}
+				</fieldset>
+				<fieldset class="fieldset">
+					<legend>Photo and notes</legend>
+					@field(props, "photo_url", "Photo link", "Optional: the web address of a photo", true) {
+						<input class="input" id="photo_url" name="photo_url" type="url" inputmode="url" value={ props.Values.PhotoURL }/>
+					}
+					@field(props, "remarks", "Notes", "Optional: what it was doing, the light, anything else", true) {
+						<textarea class="input" id="remarks" name="remarks">{ props.Values.Remarks }</textarea>
+					}
+				</fieldset>
+				<div class="form__actions">
+					<a class="button button--ghost" href={ templ.URL(props.Cancel) }>Cancel</a>
+					<button class="button" type="submit">
+						@components.IconCheck()
+						{ props.Submit }
+					</button>
+				</div>
+			</form>
+		</div>
+	}
+}
+
+templ field(props SightingFormProps, name, label, hint string, wide bool) {
+	<div class={ "field", templ.KV("field--wide", wide), templ.KV("field--error", props.Errors[name] != "") }>
+		<label for={ name }>
+			{ label }
+			if hint != "" {
+				<span class="hint">· { hint }</span>
+			}
+		</label>
+		{ children... }
+		if msg := props.Errors[name]; msg != "" {
+			<p class="field__error">{ msg }</p>
+		}
+	</div>
+}

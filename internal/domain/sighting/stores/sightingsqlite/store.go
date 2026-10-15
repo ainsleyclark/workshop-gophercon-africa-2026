@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"uuid"
 	"workshop/internal/domain/sighting"
@@ -79,10 +78,10 @@ func (s Store) List(ctx context.Context, filter sighting.ListFilter) ([]sighting
 		return nil, err
 	}
 
+	slog.DebugContext(ctx, "store: listing rows", "count", len(rows))
+
 	result := make([]sighting.Sighting, len(rows))
 	for i, row := range rows {
-		msg := fmt.Sprintf("store: listing row %d of %v", i+1, rows)
-		slog.DebugContext(ctx, msg)
 		result[i], err = transform(row)
 		if err != nil {
 			return nil, err
@@ -114,4 +113,49 @@ func (s Store) Create(ctx context.Context, id uuid.UUID, in sighting.CreateParam
 		Species:  db.Species{ID: row.SpeciesID},
 		Weather:  db.Weather{ID: row.WeatherID},
 	})
+}
+
+// Update overwrites the editable fields of the sighting with id, or
+// returns sighting.ErrNotFound if it doesn't exist.
+func (s Store) Update(ctx context.Context, id uuid.UUID, in sighting.CreateParams) (sighting.Sighting, error) {
+	params, err := toSightingCreateParams(id, in)
+	if err != nil {
+		return sighting.Sighting{}, err
+	}
+
+	n, err := s.queries.SightingUpdate(ctx, db.SightingUpdateParams{
+		HappenedAt:      params.HappenedAt,
+		RecordedBy:      params.RecordedBy,
+		IndividualCount: params.IndividualCount,
+		Remarks:         params.Remarks,
+		Locality:        params.Locality,
+		StateProvince:   params.StateProvince,
+		Country:         params.Country,
+		CountryCode:     params.CountryCode,
+		Latitude:        params.Latitude,
+		Longitude:       params.Longitude,
+		SpeciesID:       params.SpeciesID,
+		Media:           params.Media,
+		ID:              id,
+	})
+	if err != nil {
+		return sighting.Sighting{}, err
+	} else if n == 0 {
+		return sighting.Sighting{}, sighting.ErrNotFound
+	}
+
+	return s.Find(ctx, id)
+}
+
+// Delete removes the sighting with id, or returns sighting.ErrNotFound
+// if it doesn't exist.
+func (s Store) Delete(ctx context.Context, id uuid.UUID) error {
+	n, err := s.queries.SightingDelete(ctx, id)
+	if err != nil {
+		return err
+	} else if n == 0 {
+		return sighting.ErrNotFound
+	}
+
+	return nil
 }

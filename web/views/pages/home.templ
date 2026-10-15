@@ -1,27 +1,88 @@
 package pages
 
 import (
+	"strconv"
 	"workshop/internal/domain/sighting"
 	"workshop/web/views/components"
 	"workshop/web/views/layout"
 )
 
-templ Home(sightings []sighting.Sighting) {
+type HomeProps struct {
+	Sightings []sighting.Sighting
+	Summary   sighting.Summary
+	Notice    string
+}
+
+templ Home(props HomeProps) {
 	@layout.Base(layout.BaseProps{
-		Title: "Sightings",
+		Title:       "Sightings",
+		Description: "A field guide to wildlife sightings recorded around the world.",
+		Current:     "home",
 	}) {
-		<h1>Sightings</h1>
-		if len(sightings) == 0 {
-			<p>No sightings have been ingested yet.</p>
-		} else {
-			<p>Total: { len(sightings) }</p>
-			<ul class="sightings">
-				for _, s := range sightings {
-					<li>
-						@components.SightingCard(s)
-					</li>
+		<section class="hero">
+			<div class="container">
+				<span class="hero__eyebrow">Field notes</span>
+				<h1>Every animal, <em>where it was seen</em></h1>
+				<p class="hero__lead">
+					A living field guide of wildlife sightings: who spotted what, where and when. Browse the latest, or add one of your own.
+				</p>
+				<div class="hero__actions">
+					<a class="button" href="#sightings">Browse sightings</a>
+					<a class="button button--ghost" href="/sightings/new">
+						@components.IconPlus()
+						Add a sighting
+					</a>
+				</div>
+				if props.Notice != "" {
+					<p class="notice" role="status">
+						@components.IconCheck()
+						{ props.Notice }
+					</p>
 				}
-			</ul>
-		}
+				<dl class="stats">
+					@stat("Sightings", strconv.Itoa(props.Summary.Sightings))
+					@stat("Species", strconv.Itoa(props.Summary.Species))
+					@stat("Countries", strconv.Itoa(props.Summary.Countries))
+					@stat("Observers", strconv.Itoa(props.Summary.Recorders))
+				</dl>
+			</div>
+		</section>
+		<section class="section" id="sightings">
+			<div class="container">
+				<div class="section__head">
+					<div>
+						<h2>Latest sightings</h2>
+						if span := dateSpan(props.Summary); span != "" {
+							<p>{ span }</p>
+						}
+					</div>
+				</div>
+				if len(props.Sightings) == 0 {
+					<div class="empty">
+						<h3>No sightings yet</h3>
+						<p>Nothing has been recorded so far. Be the first to add one.</p>
+						<a class="button" href="/sightings/new">
+							@components.IconPlus()
+							Add a sighting
+						</a>
+					</div>
+				} else {
+					<ul class="sightings">
+						for _, s := range props.Sightings {
+							<li>
+								@components.SightingCard(s)
+							</li>
+						}
+					</ul>
+				}
+			</div>
+		</section>
 	}
+}
+
+templ stat(label, value string) {
+	<div class="stat">
+		<dt>{ label }</dt>
+		<dd>{ value }</dd>
+	</div>
 }

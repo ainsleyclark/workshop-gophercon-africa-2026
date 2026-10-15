@@ -1,0 +1,8 @@
+{
+	"name": "Field Guide Sightings",
+	"short_name": "Field Guide",
+	"icons": [{ "src": "/assets/images/logo.svg", "sizes": "any", "type": "image/svg+xml" }],
+	"theme_color": "#FAFAF7",
+	"background_color": "#FAFAF7",
+	"display": "standalone"
+}

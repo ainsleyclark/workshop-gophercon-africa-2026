@@ -1,7 +1,11 @@
 package layout
 
+import "workshop/web/views/components"
+
 type BaseProps struct {
-	Title string
+	Title       string
+	Description string
+	Current     string
 }
 
 templ Base(props BaseProps) {
@@ -10,13 +14,71 @@ templ Base(props BaseProps) {
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>{ props.Title }</title>
+			<link rel="icon" href="/assets/images/logo.svg" type="image/svg+xml"/>
+			<link rel="manifest" href="/assets/manifest.json"/>
+			<meta name="theme-color" content="#FAFAF7" media="(prefers-color-scheme: light)"/>
+			<meta name="theme-color" content="#12181A" media="(prefers-color-scheme: dark)"/>
+			<title>{ props.Title } · Field Guide</title>
+			if props.Description != "" {
+				<meta name="description" content={ props.Description }/>
+			}
+			<script>
+				(() => {
+					const saved = localStorage.getItem('theme');
+					const dark = saved ? saved === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+					document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+				})();
+			</script>
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 			<link rel="stylesheet" href="/assets/css/app.css"/>
 		</head>
 		<body>
-			<main class="container">
+			<a class="skip-link" href="#main">Skip to content</a>
+			<header class="site-header">
+				<div class="container site-header__inner">
+					<a class="logo" href="/">
+						<img src="/assets/images/logo.svg" alt="" width="36" height="36"/>
+						<span>
+							Field Guide
+							<small>Wildlife sightings</small>
+						</span>
+					</a>
+					<nav class="nav" aria-label="Main">
+						<a
+							class="nav__link nav__link--home"
+							href="/#sightings"
+							if props.Current == "home" {
+								aria-current="page"
+							}
+						>Sightings</a>
+						<a
+							class="button button--small nav__link--add"
+							href="/sightings/new"
+							aria-label="Add a sighting"
+							if props.Current == "new" {
+								aria-current="page"
+							}
+						>
+							@components.IconPlus()
+							<span>Add sighting</span>
+						</a>
+						<button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+							@components.IconMoon()
+							@components.IconSun()
+						</button>
+					</nav>
+				</div>
+			</header>
+			<main id="main">
 				{ children... }
 			</main>
+			<footer class="site-footer">
+				<div class="container site-footer__inner">
+					<span>Field Guide · a GopherCon Africa 2026 workshop</span>
+					<span>Occurrence data from <a href="https://www.gbif.org" rel="noopener">GBIF</a></span>
+				</div>
+			</footer>
 			<script src="/assets/js/app.js"></script>
 		</body>
 	</html>
