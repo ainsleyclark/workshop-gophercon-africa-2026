@@ -11,13 +11,11 @@ templ Base(props BaseProps) {
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
 			<title>{ props.Title }</title>
-			<link rel="stylesheet" href="/assets/css/app.css"/>
+			<link rel="stylesheet" href="/assets/showcase/index.css"/>
 		</head>
 		<body>
-			<main class="container">
-				{ children... }
-			</main>
-			<script src="/assets/js/app.js"></script>
+			{ children... }
+			<script type="module" src="/assets/showcase/index.js"></script>
 		</body>
 	</html>
 }

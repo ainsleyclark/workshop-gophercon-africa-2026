@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+html, body, #root { width: 100%; height: 100%; overflow: hidden; }
+body { font-family: "Plus Jakarta Sans", sans-serif; }
+
+.animal-image-texture {
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-position: center 42%;
+  background-size: cover;
+  -webkit-text-stroke: 1px rgb(255 255 255 / 12%);
+  filter: drop-shadow(0 12px 24px rgb(0 0 0 / 65%));
+}
+
+.wildlife-map-page {
+  background-color: #02040b;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, rgb(255 255 255 / 68%) 50%, transparent 100%),
+    radial-gradient(1px 1px at 76% 18%, rgb(255 255 255 / 55%) 50%, transparent 100%),
+    radial-gradient(1px 1px at 44% 72%, rgb(255 255 255 / 48%) 50%, transparent 100%),
+    radial-gradient(1px 1px at 88% 66%, rgb(255 255 255 / 62%) 50%, transparent 100%),
+    radial-gradient(1px 1px at 28% 88%, rgb(255 255 255 / 42%) 50%, transparent 100%);
+  background-size: 290px 250px, 370px 320px, 430px 360px, 510px 440px, 330px 310px;
+}
+
+.wildlife-map-pin {
+  width: var(--pin-size, 28px);
+  height: var(--pin-size, 28px);
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid #ffd34f;
+  border-radius: 9999px;
+  background: #111722;
+  box-shadow: 0 0 0 4px rgb(255 211 79 / 17%), 0 4px 16px rgb(0 0 0 / 60%);
+  cursor: pointer;
+  transition: width 180ms ease, height 180ms ease, box-shadow 180ms ease;
+}
+
+.wildlife-map-pin:hover,
+.wildlife-map-pin:focus-visible {
+  z-index: 2;
+  box-shadow: 0 0 0 7px rgb(255 211 79 / 24%), 0 5px 22px rgb(0 0 0 / 70%);
+  outline: none;
+}
+
+.wildlife-map-pin img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.maplibregl-map { font-family: inherit; }
+.maplibregl-ctrl-group { overflow: hidden; border: 1px solid rgb(255 255 255 / 18%) !important; border-radius: 9999px !important; background: rgb(0 0 0 / 62%) !important; }
+.maplibregl-ctrl-group button { background-color: transparent !important; filter: invert(1); }
+.maplibregl-ctrl-attrib { color: #ddd !important; background: rgb(0 0 0 / 55%) !important; }
+.maplibregl-ctrl-attrib a { color: #ffd34f !important; }

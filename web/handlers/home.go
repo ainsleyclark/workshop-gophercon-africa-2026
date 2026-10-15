@@ -16,7 +16,7 @@ func Home(logger *slog.Logger, sightings SightingsLister) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		items, err := sightings.List(ctx, sighting.ListFilter{
+		_, err := sightings.List(ctx, sighting.ListFilter{
 			Limit: 50,
 		})
 		if err != nil {
@@ -26,7 +26,7 @@ func Home(logger *slog.Logger, sightings SightingsLister) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		if err = pages.Home(items).Render(ctx, w); err != nil {
+		if err = pages.Home().Render(ctx, w); err != nil {
 			logger.ErrorContext(ctx, "handlers: rendering sightings: "+err.Error())
 			renderError(ctx, w, logger, http.StatusInternalServerError, "Unable to render page.")
 		}
