@@ -77,9 +77,9 @@ func Sighting(s sighting.Sighting, notice string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var5 string
-				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(photo.URL)
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(components.Sized(photo.URL, "large"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/sighting.templ`, Line: 19, Col: 54}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/sighting.templ`, Line: 19, Col: 81}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 				if templ_7745c5c3_Err != nil {
@@ -264,9 +264,9 @@ func Sighting(s sighting.Sighting, notice string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var14 string
-				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(photo.URL)
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(components.Sized(photo.URL, "large"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/sighting.templ`, Line: 62, Col: 28}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/sighting.templ`, Line: 62, Col: 55}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 				if templ_7745c5c3_Err != nil {
@@ -279,7 +279,7 @@ func Sighting(s sighting.Sighting, notice string) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(components.DisplayName(s.Species))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/sighting.templ`, Line: 62, Col: 70}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/pages/sighting.templ`, Line: 62, Col: 97}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 				if templ_7745c5c3_Err != nil {

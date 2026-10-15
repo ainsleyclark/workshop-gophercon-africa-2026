@@ -3,6 +3,8 @@ package components
 import (
 	"cmp"
 	"fmt"
+	"net/url"
+	"path"
 	"slices"
 	"strings"
 	"workshop/internal/domain/sighting"
@@ -41,6 +43,21 @@ func CoverPhoto(s sighting.Sighting) (sighting.Media, bool) {
 		return sighting.Media{}, false
 	}
 	return s.Media[i], true
+}
+
+// Sized asks iNaturalist, which hosts most of the photos, for a smaller copy:
+// "medium" is 500px and "large" 1024px. Other hosts' URLs come back as they are.
+func Sized(link, size string) string {
+	u, err := url.Parse(link)
+	if err != nil || (u.Host != "inaturalist-open-data.s3.amazonaws.com" && u.Host != "static.inaturalist.org") {
+		return link
+	}
+	dir, file := path.Split(u.Path)
+	if !strings.HasPrefix(file, "original.") {
+		return link
+	}
+	u.Path = dir + size + strings.TrimPrefix(file, "original")
+	return u.String()
 }
 
 // SightingURL is the address of a sighting's own page.

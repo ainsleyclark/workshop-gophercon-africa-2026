@@ -12,7 +12,7 @@ templ Gallery(items []sighting.Media) {
 					<figure>
 						if m.Type == "StillImage" {
 							<a class="gallery__photo" href={ templ.URL(m.URL) } data-lightbox data-caption={ credit(m) }>
-								<img src={ m.URL } alt={ altText(m) } loading="lazy"/>
+								<img src={ Sized(m.URL, "medium") } alt={ altText(m) } loading="lazy"/>
 							</a>
 						} else {
 							<a class="gallery__file" href={ templ.URL(m.URL) } rel="noopener">{ altText(m) }</a>

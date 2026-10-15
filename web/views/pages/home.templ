@@ -68,7 +68,7 @@ templ Home(props HomeProps) {
 				<div class="container spotlight__inner">
 					<a class="spotlight__photo" href={ components.SightingURL(spot) }>
 						if photo, ok := components.CoverPhoto(spot); ok {
-							<img src={ photo.URL } alt={ components.DisplayName(spot.Species) } loading="lazy"/>
+							<img src={ components.Sized(photo.URL, "large") } alt={ components.DisplayName(spot.Species) } loading="lazy"/>
 						}
 						<span class="spotlight__stamp">Latest</span>
 					</a>
@@ -238,7 +238,7 @@ templ marquee(photos []sighting.Sighting, reverse bool) {
 					for _, s := range photos {
 						if photo, ok := components.CoverPhoto(s); ok {
 							<li class="marquee__item">
-								<img src={ photo.URL } alt="" loading="lazy" decoding="async"/>
+								<img src={ components.Sized(photo.URL, "medium") } alt="" loading="lazy" decoding="async"/>
 							</li>
 						}
 					}

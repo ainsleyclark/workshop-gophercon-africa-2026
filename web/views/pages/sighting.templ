@@ -16,7 +16,7 @@ templ Sighting(s sighting.Sighting, notice string) {
 	}) {
 		<section class={ "record-hero", templ.KV("record-hero--plain", !hasPhoto) }>
 			if hasPhoto {
-				<img class="record-hero__backdrop" src={ photo.URL } alt="" aria-hidden="true"/>
+				<img class="record-hero__backdrop" src={ components.Sized(photo.URL, "large") } alt="" aria-hidden="true"/>
 			}
 			<div class="record-hero__shade" aria-hidden="true"></div>
 			<div class="container record-hero__inner">
@@ -59,7 +59,7 @@ templ Sighting(s sighting.Sighting, notice string) {
 					<figure class="detail__photo reveal">
 						if hasPhoto {
 							<a href={ templ.URL(photo.URL) } data-lightbox data-caption={ components.DisplayName(s.Species) }>
-								<img src={ photo.URL } alt={ components.DisplayName(s.Species) }/>
+								<img src={ components.Sized(photo.URL, "large") } alt={ components.DisplayName(s.Species) }/>
 							</a>
 							if photo.Creator != "" {
 								<figcaption>Photo © { photo.Creator } · click to enlarge</figcaption>

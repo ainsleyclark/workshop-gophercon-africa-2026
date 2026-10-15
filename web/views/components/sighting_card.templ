@@ -6,7 +6,7 @@ templ SightingCard(s sighting.Sighting) {
 	<article class="card">
 		<div class="card__photo">
 			if photo, ok := CoverPhoto(s); ok {
-				<img src={ photo.URL } alt={ DisplayName(s.Species) } loading="lazy" decoding="async"/>
+				<img src={ Sized(photo.URL, "medium") } alt={ DisplayName(s.Species) } loading="lazy" decoding="async"/>
 			} else {
 				<div class="photo-empty">
 					@IconImage()

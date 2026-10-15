@@ -41,9 +41,9 @@ func SightingCard(s sighting.Sighting) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var2 string
-			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(photo.URL)
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(Sized(photo.URL, "medium"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/components/sighting_card.templ`, Line: 9, Col: 24}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/components/sighting_card.templ`, Line: 9, Col: 41}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 			if templ_7745c5c3_Err != nil {
@@ -56,7 +56,7 @@ func SightingCard(s sighting.Sighting) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(DisplayName(s.Species))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/components/sighting_card.templ`, Line: 9, Col: 55}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `web/views/components/sighting_card.templ`, Line: 9, Col: 72}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
