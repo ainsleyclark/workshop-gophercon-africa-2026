@@ -1,0 +1,28 @@
+/* block: threejs — copy to web/assets/css/threejs.css. See threejs.md. */
+
+.three-scene {
+	display: block;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	transition: opacity 0.8s ease-out;
+}
+
+/* Transparent until it has drawn, so the parent's background is the fallback. */
+.three-scene.is-live {
+	opacity: 1;
+}
+
+/* Fills its parent, behind the content: the parent needs position: relative. */
+.three-scene--backdrop {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.three-scene {
+		transition: none;
+	}
+}

@@ -1,6 +1,8 @@
 package pages
 
 import (
+	"fmt"
+
 	"workshop/internal/domain/sighting"
 	"workshop/web/views/components"
 	"workshop/web/views/layout"
@@ -8,20 +10,101 @@ import (
 
 templ Home(sightings []sighting.Sighting) {
 	@layout.Base(layout.BaseProps{
-		Title: "Sightings",
+		Title:       "Pawprint — wildlife sightings",
+		Description: "Spin the globe or search a country to see the animals people have spotted there, from GBIF.",
 	}) {
-		<h1>Sightings</h1>
-		if len(sightings) == 0 {
-			<p>No sightings have been ingested yet.</p>
-		} else {
-			<p>Total: { len(sightings) }</p>
-			<ul class="sightings">
-				for _, s := range sightings {
-					<li>
-						@components.SightingCard(s)
-					</li>
+		{{ summary := sighting.Summarise(sightings) }}
+		{{ countries := components.Countries(sightings) }}
+		<section class="hero" aria-labelledby="hero-title">
+			<div class="hero__text">
+				<p class="eyebrow">Wildlife sightings from GBIF</p>
+				<h1 id="hero-title">Every animal spotted, on one living globe</h1>
+				<p class="lede">Spin the globe or search a country to see what people have seen there, from lions on the savannah to whales off the coast.</p>
+				<form class="search" role="search" action="/#sightings" data-search>
+					<label class="visually-hidden" for="country-search">Search sightings by country</label>
+					<svg class="icon search__icon" aria-hidden="true"><use href="#i-search"></use></svg>
+					<input id="country-search" type="search" name="country" list="countries" placeholder="Search a country…" autocomplete="off"/>
+					<button class="icon-btn" type="submit" aria-label="Show sightings">
+						<svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+					</button>
+					<datalist id="countries">
+						for _, c := range countries {
+							<option value={ c.Name }></option>
+						}
+					</datalist>
+				</form>
+				if len(countries) > 0 {
+					<ul class="chips" aria-label="Popular countries">
+						for _, c := range topN(countries, 5) {
+							<li><button class="chip" type="button" data-pick-country={ c.Name }>{ c.Name } <small>{ c.Count }</small></button></li>
+						}
+					</ul>
 				}
+			</div>
+			<div class="hero__globe" id="globe">
+				@templ.JSONScript("globe-data", components.GlobePoints(sightings))
+				@components.ThreeScene(components.ThreeSceneProps{
+					Scene: "globe",
+					Label: "A globe of where animals were seen. Drag to spin it, and click a dot to show that country's sightings.",
+				})
+				<div class="globe-controls" aria-label="Globe controls" role="group">
+					<button class="icon-btn" type="button" aria-label="Zoom in" data-globe="in"><svg class="icon" aria-hidden="true"><use href="#i-plus"></use></svg></button>
+					<button class="icon-btn" type="button" aria-label="Zoom out" data-globe="out"><svg class="icon" aria-hidden="true"><use href="#i-minus"></use></svg></button>
+					<button class="icon-btn" type="button" aria-label="Pause spinning" aria-pressed="false" data-globe="spin"><svg class="icon" aria-hidden="true"><use href="#i-pause"></use></svg></button>
+				</div>
+				<p class="globe-hint">Drag to spin · click a dot to choose a country</p>
+			</div>
+			<ul class="stats">
+				<li class="stat">
+					<span class="stat__label"><i class="dot" aria-hidden="true"></i>Sightings</span>
+					<strong>{ summary.Sightings }</strong>
+					<small>reported to GBIF</small>
+				</li>
+				<li class="stat">
+					<span class="stat__label"><i class="dot" aria-hidden="true"></i>Species</span>
+					<strong>{ summary.Species }</strong>
+					<small>kinds of animal</small>
+				</li>
+				<li class="stat stat--glass">
+					<strong>{ fmt.Sprintf("%d countries", summary.Countries) }</strong>
+					<small>Every dot on the globe is someone who stopped, looked and wrote it down.</small>
+				</li>
 			</ul>
-		}
+			if f, ok := components.Featured(sightings); ok {
+				{{ photo, _ := components.Cover(f) }}
+				<a class="featured" href="#sightings">
+					<img src={ photo.URL } alt="" loading="lazy" decoding="async"/>
+					<span class="featured__text">
+						<span class="featured__title">{ components.Name(f) }</span>
+						<span class="featured__rule" aria-hidden="true"></span>
+						<span class="featured__more">See all sightings <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+					</span>
+				</a>
+			}
+		</section>
+		<section id="sightings" class="listing" aria-labelledby="listing-title">
+			<div class="listing__head">
+				<div>
+					<p class="eyebrow">The field log</p>
+					<h2 id="listing-title">Recent sightings</h2>
+				</div>
+				<p class="listing__status">
+					<output aria-live="polite" data-status>{ fmt.Sprintf("All %d sightings", len(sightings)) }</output>
+					<button class="pill pill--soft pill--small" type="button" data-clear hidden>Show all</button>
+				</p>
+			</div>
+			if len(sightings) == 0 {
+				<p class="empty">No sightings have been ingested yet.</p>
+			} else {
+				<ul id="sightings-list" class="masonry">
+					for _, s := range sightings {
+						<li { components.ItemAttrs(s)... }>
+							@components.SightingCard(s)
+						</li>
+					}
+				</ul>
+				<p class="empty" data-empty hidden>No sightings match. Try another country, or show all.</p>
+			}
+		</section>
 	}
 }

@@ -1,0 +1,21 @@
+package components
+
+type ThreeSceneProps struct {
+	Scene    string
+	Label    string
+	Backdrop bool
+}
+
+templ ThreeScene(props ThreeSceneProps) {
+	<canvas
+		class={ "three-scene", templ.KV("three-scene--backdrop", props.Backdrop) }
+		data-scene={ props.Scene }
+		if props.Label != "" {
+			role="img"
+			aria-label={ props.Label }
+		} else {
+			aria-hidden="true"
+		}
+	></canvas>
+	<script type="module" src={ "/assets/js/scenes/" + props.Scene + ".js" }></script>
+}

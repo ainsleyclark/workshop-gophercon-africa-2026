@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="web" type="GoApplicationRunConfiguration" factoryName="Go Application">
-    <module name="workshop-gophercon-africa-2026" />
+    <module name="GoClasses" />
     <working_directory value="$PROJECT_DIR$" />
     <parameters value="web" />
     <kind value="PACKAGE" />
