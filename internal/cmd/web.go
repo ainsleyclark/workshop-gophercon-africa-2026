@@ -36,7 +36,7 @@ func webCmd(app *app) *cli.Command {
 			ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 			defer stop()
 
-			router := web.New(app.Logger, app.Config, app.Sightings)
+			router := web.New(app.Logger, app.Config, app.Atlas)
 
 			port := cmd.Int("port")
 			if url := cmd.String("live-reload-url"); url != "" {

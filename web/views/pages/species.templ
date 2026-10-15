@@ -1,0 +1,103 @@
+package pages
+
+import (
+	"workshop/web/views/components"
+	"workshop/web/views/layout"
+	"workshop/web/views/vm"
+)
+
+type SpeciesListProps struct {
+	Site    vm.Site
+	Filters vm.Filters
+	Results vm.Results
+}
+
+templ SpeciesList(p SpeciesListProps) {
+	@layout.Base(layout.BaseProps{
+		Title:       "Species",
+		Description: "Search the species seen in " + p.Site.CountryName + ".",
+		Site:        p.Site,
+	}) {
+		@Browse(p.Site, p.Filters, p.Results, true)
+	}
+}
+
+type SpeciesProps struct {
+	Site   vm.Site
+	Detail vm.Detail
+}
+
+templ Species(p SpeciesProps) {
+	@layout.Base(layout.BaseProps{
+		Title:       p.Detail.CommonName,
+		Description: p.Detail.CommonName + " (" + p.Detail.ScientificName + ") in " + p.Site.CountryName + ": taxonomy, photographs and a map of every sighting.",
+		Site:        p.Site,
+		Backdrop:    p.Detail.Cover.Small,
+		Map:         true,
+	}) {
+		{{ d := p.Detail }}
+		<article class="detail">
+			<header class="detail__hero">
+				<div class="detail__media">
+					@components.Photo(components.PhotoProps{Photo: d.Cover, Name: d.CommonName, Size: "large", Eager: true})
+				</div>
+				<div class="detail__copy">
+					<nav class="crumbs" aria-label="Breadcrumb">
+						<a href="/species">
+							@components.Icon("back")
+							<span>All species</span>
+						</a>
+					</nav>
+					if d.Kicker != "" {
+						<p class="hero__kicker">{ d.Kicker }</p>
+					}
+					<h1 class="hero__title display">{ d.CommonName }</h1>
+					<p class="eyebrow hero__sci">{ d.ScientificName }</p>
+					@components.IUCNBadge(d.IUCN)
+					<div class="hero__actions">
+						@components.PillButton(components.ButtonProps{Href: "#map", Label: "Sightings map", Variant: "amber", Icon: "map"})
+						@components.PillButton(components.ButtonProps{Href: d.GBIFURL, Label: "On GBIF", Variant: "dark", Icon: "external", External: true})
+					</div>
+					if d.Cover.Credit != "" {
+						<p class="detail__credit">
+							Photo
+							@components.Credit(d.Cover)
+						</p>
+					}
+				</div>
+			</header>
+			@components.Stats(d.Stats)
+			<div class="detail__grid">
+				<section class="panel" aria-labelledby="taxonomy-title">
+					@components.Eyebrow("Classification")
+					<h2 id="taxonomy-title" class="panel__title display">Taxonomy</h2>
+					@components.Taxonomy(d.Taxonomy)
+				</section>
+				<section class="panel panel--map" id="map" aria-labelledby="map-title" tabindex="-1">
+					@components.Eyebrow("Where it's been seen")
+					<h2 id="map-title" class="panel__title display">Sightings in { p.Site.CountryName }</h2>
+					@components.ObservationMap(d.Points)
+				</section>
+			</div>
+			if len(d.Notes) > 0 {
+				<section class="panel" aria-labelledby="notes-title">
+					@components.Eyebrow("In the observers' words")
+					<h2 id="notes-title" class="panel__title display">Field notes</h2>
+					@components.FieldNotes(d.Notes)
+				</section>
+			}
+			if len(d.Gallery) > 0 {
+				<section class="panel" aria-labelledby="gallery-title">
+					@components.Eyebrow("Photographs")
+					<h2 id="gallery-title" class="panel__title display">From the field</h2>
+					@components.Gallery(d.Gallery, d.CommonName)
+				</section>
+			}
+			<section class="panel" id="observations" aria-labelledby="observations-title">
+				@components.Eyebrow("Records")
+				<h2 id="observations-title" class="panel__title display">Recent sightings</h2>
+				@components.Observations(d.Observations, d.MoreObserved)
+			</section>
+		</article>
+	}
+}

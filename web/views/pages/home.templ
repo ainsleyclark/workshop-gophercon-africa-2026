@@ -1,27 +1,58 @@
 package pages
 
 import (
-	"workshop/internal/domain/sighting"
 	"workshop/web/views/components"
 	"workshop/web/views/layout"
+	"workshop/web/views/vm"
 )
 
-templ Home(sightings []sighting.Sighting) {
+type HomeProps struct {
+	Site    vm.Site
+	Hero    vm.Hero
+	Filters vm.Filters
+	Results vm.Results
+}
+
+templ Home(p HomeProps) {
 	@layout.Base(layout.BaseProps{
-		Title: "Sightings",
+		Title:       p.Site.CountryName + " wildlife",
+		Description: "Wildlife sightings recorded in " + p.Site.CountryName + ", species by species, from GBIF occurrence data.",
+		Site:        p.Site,
+		Backdrop:    backdrop(p.Hero),
 	}) {
-		<h1>Sightings</h1>
-		if len(sightings) == 0 {
-			<p>No sightings have been ingested yet.</p>
-		} else {
-			<p>Total: { len(sightings) }</p>
-			<ul class="sightings">
-				for _, s := range sightings {
-					<li>
-						@components.SightingCard(s)
-					</li>
-				}
-			</ul>
+		<h1 class="sr-only">{ p.Site.Name }: wildlife sightings in { p.Site.CountryName }</h1>
+		if len(p.Hero.Slides) > 0 {
+			@components.Hero(p.Hero)
 		}
+		@Browse(p.Site, p.Filters, p.Results, false)
 	}
+}
+
+func backdrop(h vm.Hero) string {
+	if len(h.Slides) == 0 {
+		return ""
+	}
+	return h.Slides[h.Active].Photo.Small
+}
+
+// Browse is the atlas's search and grid, on the home page and its own.
+templ Browse(site vm.Site, f vm.Filters, r vm.Results, standalone bool) {
+	<section id="browse" class="browse" aria-labelledby="browse-title">
+		<header class="browse__head">
+			@components.Eyebrow("The atlas")
+			if standalone {
+				<h1 id="browse-title" class="display browse__title">Species of { site.CountryName }</h1>
+			} else {
+				<h2 id="browse-title" class="display browse__title">Species of { site.CountryName }</h2>
+			}
+			<p class="browse__intro">
+				Every species with a photographed sighting in { site.CountryName }, most often seen first.
+				Search by common or scientific name, or narrow by class, order, family and IUCN status.
+			</p>
+		</header>
+		@components.FilterBar(f)
+		<div id={ components.ResultsID } class="results">
+			@components.Results(r)
+		</div>
+	</section>
 }

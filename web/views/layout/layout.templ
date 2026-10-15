@@ -1,8 +1,23 @@
 package layout
 
+import (
+	"workshop/web/views/components"
+	"workshop/web/views/vm"
+)
+
 type BaseProps struct {
-	Title string
+	Title       string
+	Description string
+	Site        vm.Site
+	// Backdrop is the photo blurred behind the page, if any.
+	Backdrop string
+	// Map loads Leaflet, which only the species page needs.
+	Map bool
 }
+
+// htmxConfig swaps error responses too, so a failed search shows the
+// error the server rendered rather than leaving stale results.
+const htmxConfig = `{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"[45]..","swap":true,"error":true}],"defaultSwapStyle":"innerHTML","scrollIntoViewOnBoost":false}`
 
 templ Base(props BaseProps) {
 	<!DOCTYPE html>
@@ -10,14 +25,90 @@ templ Base(props BaseProps) {
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
-			<title>{ props.Title }</title>
+			<title>{ props.Title } · { props.Site.Name }</title>
+			if props.Description != "" {
+				<meta name="description" content={ props.Description }/>
+			}
+			<meta name="theme-color" content="#E8E2D5"/>
+			<meta name="htmx-config" content={ htmxConfig }/>
+			<link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml"/>
+			<link rel="preconnect" href="https://fonts.googleapis.com"/>
+			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+			<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;0,900;1,400;1,600&display=swap"/>
+			if props.Map {
+				<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+			}
 			<link rel="stylesheet" href="/assets/css/app.css"/>
+			<script>document.documentElement.classList.add("js")</script>
 		</head>
 		<body>
-			<main class="container">
-				{ children... }
-			</main>
-			<script src="/assets/js/app.js"></script>
+			<a class="skip-link" href="#main">Skip to content</a>
+			if props.Backdrop != "" {
+				<div class="backdrop" aria-hidden="true">
+					<img id="backdrop" src={ props.Backdrop } alt="" decoding="async" referrerpolicy="no-referrer"/>
+				</div>
+			}
+			<div class="frame">
+				@header(props.Site)
+				<main id="main" tabindex="-1">
+					{ children... }
+				</main>
+				@footer(props.Site)
+			</div>
+			<script src="/assets/js/vendor/htmx-2.0.4.min.js" defer></script>
+			if props.Map {
+				<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+			}
+			<script src="/assets/js/app.js" defer></script>
 		</body>
 	</html>
+}
+
+templ header(site vm.Site) {
+	<header class="masthead">
+		<a class="brand" href="/" aria-label={ site.Name + ", home" }>
+			@components.Logo()
+			<span class="brand__text">
+				<span class="brand__name">{ site.Name }</span>
+				<span class="brand__tag">Wildlife atlas</span>
+			</span>
+		</a>
+		<p class="masthead__region" aria-hidden="true">
+			<span>{ site.CountryName } · Field records</span>
+			<span class="masthead__rule"></span>
+			@components.Icon("pin")
+		</p>
+		<nav class="masthead__nav" aria-label="Main">
+			<a class="masthead__link" href="/species">Species</a>
+			<a class="icon-button" href="/species#q" aria-label="Search species">
+				@components.Icon("search")
+			</a>
+			<details class="menu">
+				<summary class="icon-button" aria-label="Menu">
+					@components.Icon("menu")
+				</summary>
+				<ul class="menu__panel">
+					<li><a href="/#hero">Featured</a></li>
+					<li><a href="/species">All species</a></li>
+					<li><a href="/species?iucn=VU">Vulnerable</a></li>
+					<li><a href="/species?iucn=EN">Endangered</a></li>
+					<li><a href="#about-data">About the data</a></li>
+				</ul>
+			</details>
+		</nav>
+	</header>
+}
+
+templ footer(site vm.Site) {
+	<footer class="colophon" id="about-data">
+		<div>
+			<p class="eyebrow">About the data</p>
+			<p class="colophon__text">
+				Every record here is an occurrence from
+				<a href="https://www.gbif.org" rel="noopener">GBIF</a>, the Global Biodiversity Information Facility,
+				observed in { site.CountryName }. Photographs belong to the people credited beside them and are shown under the licences they chose.
+			</p>
+		</div>
+		<p class="colophon__mark">{ site.Name }</p>
+	</footer>
 }

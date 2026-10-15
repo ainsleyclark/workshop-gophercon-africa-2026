@@ -272,6 +272,7 @@ func (s Service) saveSighting(ctx context.Context, v gbif.Occurrence, speciesID,
 		IndividualCount: v.IndividualCount,
 		Remarks:         v.OccurrenceRemarks,
 		ReferenceURL:    v.References,
+		IUCNCategory:    v.IucnRedListCategory,
 		Location: Location{
 			Country:                       v.Country,
 			CountryCode:                   countryCode,

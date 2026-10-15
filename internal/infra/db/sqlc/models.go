@@ -33,6 +33,7 @@ type Sighting struct {
 	SpeciesID                     uuid.UUID `db:"species_id" json:"species_id"`
 	WeatherID                     uuid.UUID `db:"weather_id" json:"weather_id"`
 	Media                         string    `db:"media" json:"media"`
+	IucnCategory                  string    `db:"iucn_category" json:"iucn_category"`
 }
 
 type Species struct {

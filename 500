@@ -1,0 +1,21 @@
+go run .
+NAME:
+   workshop - Explore wildlife sightings from GBIF
+
+USAGE:
+   workshop [global options] [command [command options]]
+
+COMMANDS:
+   sightings, s  Ingest, list and inspect sightings
+   species, sp   List and inspect species, which are saved while ingesting sightings
+   stats         Show a summary of the saved sightings and species
+   animals       List the animals the app recognises and the GBIF taxa behind them
+   web, w        Serve the sightings web interface
+   db            Manage the database
+   help, h       Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --verbose    show debug logs on stderr
+   --db string  SQLite database URL (default: "file:workshop.db")
+   --live       use the live GBIF and Open-Meteo APIs instead of the bundled mock; they're rate limited
+   --help, -h   show help
