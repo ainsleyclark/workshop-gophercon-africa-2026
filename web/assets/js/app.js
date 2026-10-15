@@ -408,5 +408,159 @@
 		count();
 	});
 
+	// Full screen: one animal at a time, the photo first, then its captions one by one.
+	const theatre = document.querySelector('[data-theatre]');
+	const openTheatre = document.querySelector('[data-theatre-open]');
+	if (theatre && openTheatre) {
+		const layers = Array.from(theatre.querySelectorAll('[data-theatre-img]'));
+		const fields = {};
+		theatre.querySelectorAll('[data-t]').forEach(function (el) { fields[el.dataset.t] = el; });
+		const credit = theatre.querySelector('[data-t-credit]');
+		const bar = theatre.querySelector('[data-theatre-bar]');
+		const tCount = theatre.querySelector('[data-theatre-count]');
+		const tPlay = theatre.querySelector('[data-theatre="play"]');
+		const HOLD = 8000;
+		let reel = [];
+		let at = 0;
+		let layer = 0;
+		let playing = false;
+		let advance = 0;
+		let reveal = 0;
+		let idle = 0;
+		let token = 0;
+
+		function caption(item) {
+			const d = item.data;
+			fields.name.textContent = d.name || '';
+			fields.scientific.textContent = d.scientific || '';
+			fields.place.textContent = d.place || '';
+			fields.date.textContent = d.date || '';
+			fields.credit.textContent = d.credit || '';
+			credit.hidden = !d.credit;
+			tCount.textContent = (at + 1) + ' / ' + reel.length;
+		}
+
+		function schedule() {
+			clearTimeout(advance);
+			bar.classList.remove('is-running');
+			void bar.offsetWidth;
+			if (!playing) return;
+			bar.classList.add('is-running');
+			advance = setTimeout(function () { show(at + 1); }, HOLD);
+		}
+
+		function show(i) {
+			if (!reel.length) return;
+			at = (i + reel.length) % reel.length;
+			const item = reel[at];
+			const mine = ++token;
+			theatre.classList.remove('is-captioned');
+			clearTimeout(reveal);
+
+			const next = layers[1 - layer];
+			next.onload = function () {
+				if (mine !== token) return;
+				token++;
+				layers[layer].classList.remove('is-shown');
+				next.classList.add('is-shown');
+				next.classList.toggle('is-alt', at % 2 === 1);
+				layer = 1 - layer;
+				// The animal first, the words after it.
+				const shown = token;
+				reveal = setTimeout(function () {
+					if (shown !== token) return;
+					caption(item);
+					theatre.classList.add('is-captioned');
+				}, still ? 0 : 1200);
+				schedule();
+				const after = reel[(at + 1) % reel.length];
+				if (after) new Image().src = after.data.photo;
+			};
+			next.onerror = function () {
+				if (mine === token) show(at + 1);
+			};
+			next.alt = item.data.name || '';
+			next.src = item.data.photo;
+			if (next.complete && next.naturalWidth) next.onload();
+		}
+
+		function setTheatrePlaying(on) {
+			playing = on;
+			tPlay.setAttribute('aria-pressed', String(on));
+			tPlay.setAttribute('aria-label', on ? 'Pause' : 'Play');
+			theatre.classList.toggle('is-paused', !on);
+			schedule();
+		}
+
+		function wake() {
+			theatre.classList.add('is-awake');
+			clearTimeout(idle);
+			idle = setTimeout(function () { theatre.classList.remove('is-awake'); }, 2500);
+		}
+
+		function open() {
+			const vis = visible();
+			reel = vis.filter(function (i) { return i.data.photo; });
+			if (!reel.length) return;
+			const here = vis[current()];
+			const start = Math.max(0, reel.indexOf(here));
+			setPlaying(false);
+			theatre.hidden = false;
+			document.body.classList.add('has-theatre');
+			if (theatre.requestFullscreen) theatre.requestFullscreen().catch(function () {});
+			theatre.focus();
+			wake();
+			setTheatrePlaying(!still);
+			show(start);
+		}
+
+		function close() {
+			if (theatre.hidden) return;
+			clearTimeout(advance);
+			clearTimeout(reveal);
+			token++;
+			theatre.hidden = true;
+			theatre.classList.remove('is-captioned');
+			layers.forEach(function (l) { l.classList.remove('is-shown'); });
+			document.body.classList.remove('has-theatre');
+			if (document.fullscreenElement) document.exitFullscreen().catch(function () {});
+			// Back in the gallery on the animal they stopped at.
+			const vis = visible();
+			const i = vis.indexOf(reel[at]);
+			if (i >= 0) go(i);
+			openTheatre.focus();
+		}
+
+		openTheatre.addEventListener('click', open);
+		document.addEventListener('fullscreenchange', function () {
+			if (!document.fullscreenElement) close();
+		});
+
+		theatre.addEventListener('click', function (e) {
+			const btn = e.target.closest('[data-theatre]');
+			if (!btn) return;
+			const action = btn.dataset.theatre;
+			if (action === 'close') close();
+			if (action === 'play') setTheatrePlaying(!playing);
+			if (action === 'prev') show(at - 1);
+			if (action === 'next') show(at + 1);
+		});
+
+		theatre.addEventListener('keydown', function (e) {
+			wake();
+			if (e.key === 'Escape') close();
+			else if (e.key === 'ArrowRight') show(at + 1);
+			else if (e.key === 'ArrowLeft') show(at - 1);
+			else if (e.key === ' ' && !e.target.closest('button')) {
+				e.preventDefault();
+				setTheatrePlaying(!playing);
+			}
+		});
+		theatre.addEventListener('pointermove', wake);
+		document.addEventListener('visibilitychange', function () {
+			if (!theatre.hidden && playing) schedule();
+		});
+	}
+
 	setView(localStorage.getItem('sightings:view') === 'gallery' ? 'gallery' : 'grid');
 })();

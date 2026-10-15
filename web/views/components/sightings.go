@@ -102,9 +102,9 @@ func ItemID(s sighting.Sighting) string { return "s-" + s.ID.String() }
 // Name is the animal's name as the card shows it.
 func Name(s sighting.Sighting) string { return displayName(s.Species) }
 
-// ItemAttrs marks a list item with what the search and "similar" match on.
+// ItemAttrs marks a list item with what the search, "similar" and the full screen gallery read.
 func ItemAttrs(s sighting.Sighting) templ.Attributes {
-	return templ.Attributes{
+	attrs := templ.Attributes{
 		"id":           ItemID(s),
 		"data-id":      s.ID.String(),
 		"data-name":    displayName(s.Species),
@@ -113,6 +113,14 @@ func ItemAttrs(s sighting.Sighting) templ.Attributes {
 		"data-order":   s.Species.Order,
 		"data-class":   s.Species.Class,
 	}
+	if photo, ok := Cover(s); ok {
+		attrs["data-photo"] = photo.URL
+		attrs["data-credit"] = cmp.Or(photo.Creator, s.RecordedBy)
+		attrs["data-scientific"] = s.Species.ScientificName
+		attrs["data-place"] = place(s.Location)
+		attrs["data-date"] = s.HappenedAt.Format("2 January 2006")
+	}
+	return attrs
 }
 
 func photoCount(s sighting.Sighting) int {

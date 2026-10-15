@@ -163,6 +163,46 @@ templ Home(sightings []sighting.Sighting) {
 					<svg class="icon" aria-hidden="true"><use href="#i-next"></use></svg>
 				</button>
 				<output class="carousel-count" aria-live="polite" data-carousel-count></output>
+				<button class="pill pill--soft carousel-full" type="button" data-theatre-open>
+					<svg class="icon" aria-hidden="true"><use href="#i-expand"></use></svg>
+					Full screen
+				</button>
+			</div>
+			<div class="theatre" role="dialog" aria-modal="true" aria-label="Full screen gallery" tabindex="-1" data-theatre hidden>
+				<div class="theatre__stage">
+					<img class="theatre__img" alt="" data-theatre-img/>
+					<img class="theatre__img" alt="" data-theatre-img/>
+				</div>
+				<div class="theatre__shade" aria-hidden="true"></div>
+				<div class="theatre__caption" aria-live="polite">
+					<p class="theatre__brand"><img src="/assets/images/logo.svg" alt="" width="22" height="22"/> PAWPRINT · Field log</p>
+					<h2 class="theatre__title" data-t="name"></h2>
+					<p class="theatre__sci" data-t="scientific"></p>
+					<p class="theatre__meta">
+						<svg class="icon" aria-hidden="true"><use href="#i-pin"></use></svg>
+						<span data-t="place"></span>
+						<span class="theatre__sep" aria-hidden="true">·</span>
+						<span data-t="date"></span>
+					</p>
+					<p class="theatre__credit" data-t-credit>Photo by <span data-t="credit"></span></p>
+				</div>
+				<div class="theatre__progress" aria-hidden="true"><span data-theatre-bar></span></div>
+				<div class="theatre__controls">
+					<output class="theatre__count" data-theatre-count></output>
+					<button class="icon-btn icon-btn--glass" type="button" aria-label="Previous animal" data-theatre="prev">
+						<svg class="icon" aria-hidden="true"><use href="#i-prev"></use></svg>
+					</button>
+					<button class="icon-btn icon-btn--glass" type="button" aria-label="Pause" aria-pressed="true" data-theatre="play">
+						<svg class="icon icon--pause" aria-hidden="true"><use href="#i-pause"></use></svg>
+						<svg class="icon icon--play" aria-hidden="true"><use href="#i-play"></use></svg>
+					</button>
+					<button class="icon-btn icon-btn--glass" type="button" aria-label="Next animal" data-theatre="next">
+						<svg class="icon" aria-hidden="true"><use href="#i-next"></use></svg>
+					</button>
+					<button class="icon-btn icon-btn--glass" type="button" aria-label="Leave full screen" data-theatre="close">
+						<svg class="icon" aria-hidden="true"><use href="#i-close"></use></svg>
+					</button>
+				</div>
 			</div>
 			if len(sightings) == 0 {
 				<p class="empty">No sightings have been ingested yet.</p>

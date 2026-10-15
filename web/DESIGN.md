@@ -53,6 +53,12 @@ from Google Fonts.
 - **Grid / Gallery switch** above the list (black pill = current). Gallery is the same list as one
   big card at a time, photo left and details right (stacked on phones), with previous / Play-Pause
   / next and "3 of 100 · Lion". Play advances every 5 seconds; the choice is remembered.
+- **Full screen** (from the gallery's "Full screen" button): a screensaver-style reel, always
+  dark. Each photo fills the screen and drifts slowly; about a second later the captions rise in
+  one after another: brand line, big name, scientific name, place and date, "Photo by". A short
+  moss progress bar under them; 8 seconds a photo. Controls (count, previous, play/pause, next,
+  close) are glass circles bottom right that show on mouse move and hide when idle. Esc or ✕
+  leaves, back on the animal it stopped at. Only sightings with a photo are in the reel.
 - **Sightings**: a photo wall, each column filling top to bottom (CSS columns): 4 from 1024px, 2
   below. Cards keep each photo's own shape, capped at 440px tall.
 - **Card actions**: like (heart), 1–5 star rating, "Similar" (same family, then order, then class),
