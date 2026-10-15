@@ -1,0 +1,79 @@
+/* block: map — copy to web/assets/css/map.css. See map.md. */
+
+/* Tune from the site's own tokens, on :root or on one .map:
+     --map-marker         the marker fill; map.js reads it
+     --map-marker-stroke  the marker outline and the cluster count
+     --map-height         a fixed height, instead of the aspect ratio
+     --map-radius         the corners */
+
+/* Leaflet measures the box when it starts, so it needs its size before then. */
+.map {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	min-height: 320px;
+	height: var(--map-height, auto);
+	overflow: hidden;
+	border-radius: var(--map-radius, 0);
+	background: #e6e2d8;
+	isolation: isolate;
+}
+
+/* Leaflet adds tabindex=0, so the map can be focused and wheel-zoomed. */
+.map:focus-visible {
+	outline: 2px solid var(--map-marker, #c2410c);
+	outline-offset: 2px;
+}
+
+.map.leaflet-container {
+	font-family: inherit;
+}
+
+/* Only shown when map.js found no Leaflet or no points. */
+.map__fallback {
+	display: none;
+	position: absolute;
+	inset: 0;
+	place-content: center;
+	margin: 0;
+	padding: 1rem;
+	text-align: center;
+}
+
+.map.is-unavailable .map__fallback {
+	display: grid;
+}
+
+.map .leaflet-popup-content-wrapper {
+	border-radius: var(--map-radius, 4px);
+}
+
+.map__popup {
+	display: grid;
+	gap: 0.25rem;
+	font-size: 0.875rem;
+}
+
+/* Cluster bubbles take the marker colour instead of the plugin's greens. */
+.map .marker-cluster {
+	background: color-mix(in srgb, var(--map-marker, #c2410c) 35%, transparent);
+}
+
+.map .marker-cluster div {
+	background: var(--map-marker, #c2410c);
+	color: var(--map-marker-stroke, #fff);
+	font: inherit;
+	font-weight: 600;
+}
+
+/* A dark site: the tiles inverted, which keeps the labels readable. */
+.map--dark .leaflet-tile {
+	filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.map .leaflet-fade-anim .leaflet-tile,
+	.map .leaflet-zoom-anim .leaflet-zoom-animated {
+		transition: none;
+	}
+}

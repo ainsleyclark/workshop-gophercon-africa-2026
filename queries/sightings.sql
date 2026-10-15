@@ -47,3 +47,23 @@ INSERT INTO sightings (
 	weather_id,
 	media
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+
+-- name: SightingUpdate :execrows
+UPDATE sightings SET
+	happened_at = ?,
+	recorded_by = ?,
+	individual_count = ?,
+	remarks = ?,
+	locality = ?,
+	state_province = ?,
+	country = ?,
+	country_code = ?,
+	latitude = ?,
+	longitude = ?,
+	species_id = ?,
+	media = ?,
+	updated_at = CURRENT_TIMESTAMP
+WHERE id = ?;
+
+-- name: SightingDelete :execrows
+DELETE FROM sightings WHERE id = ?;

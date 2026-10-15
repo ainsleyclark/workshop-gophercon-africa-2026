@@ -12,9 +12,11 @@ import (
 
 type Querier interface {
 	SightingCreate(ctx context.Context, arg SightingCreateParams) (Sighting, error)
+	SightingDelete(ctx context.Context, id uuid.UUID) (int64, error)
 	SightingFind(ctx context.Context, id uuid.UUID) (SightingFindRow, error)
 	SightingFindByGbifKey(ctx context.Context, gbifKey int64) (SightingFindByGbifKeyRow, error)
 	SightingList(ctx context.Context, arg SightingListParams) ([]SightingListRow, error)
+	SightingUpdate(ctx context.Context, arg SightingUpdateParams) (int64, error)
 	SpeciesCreate(ctx context.Context, arg SpeciesCreateParams) (Species, error)
 	SpeciesFind(ctx context.Context, id uuid.UUID) (Species, error)
 	SpeciesFindByGbifKey(ctx context.Context, gbifKey int64) (Species, error)

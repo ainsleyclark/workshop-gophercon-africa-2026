@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+	<style>
+		.bg { fill: #2F5D50; }
+		.sun { fill: #C8553D; }
+		.leaf { fill: #FAFAF7; }
+		@media (prefers-color-scheme: dark) {
+			.bg { fill: #6FB39E; }
+			.sun { fill: #E07A62; }
+			.leaf { fill: #12181A; }
+		}
+	</style>
+	<rect class="bg" width="64" height="64" rx="16"/>
+	<circle class="sun" cx="44" cy="20" r="8"/>
+	<path class="leaf" fill-rule="evenodd" d="M14 50c0-17 11-28 30-28-1 19-12 30-28 30l-2-2zm4-2 14-14-2-2-14 14z"/>
+</svg>

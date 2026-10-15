@@ -1,0 +1,31 @@
+/* block: transitions — copy to web/assets/css/transitions.css. See transitions.md. */
+
+/* Cross-fade between pages of this site. Browsers without view transitions
+   ignore every line here and navigate as they always did. */
+@view-transition {
+	navigation: auto;
+}
+
+/* Quicker than the browser's quarter-second, so the site feels brisk rather than animated. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 180ms;
+}
+
+/* Named parts stay put while the rest fades: the browser moves each from
+   where it was to where it is. A name may appear once per page. */
+.logo {
+	view-transition-name: logo;
+}
+
+.site-header {
+	view-transition-name: site-header;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
+	}
+}

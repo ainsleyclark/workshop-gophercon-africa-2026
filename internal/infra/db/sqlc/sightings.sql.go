@@ -111,6 +111,18 @@ func (q *Queries) SightingCreate(ctx context.Context, arg SightingCreateParams) 
 	return i, err
 }
 
+const sightingDelete = `-- name: SightingDelete :execrows
+DELETE FROM sightings WHERE id = ?
+`
+
+func (q *Queries) SightingDelete(ctx context.Context, id uuid.UUID) (int64, error) {
+	result, err := q.db.ExecContext(ctx, sightingDelete, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const sightingFind = `-- name: SightingFind :one
 SELECT sightings.id, sightings.created_at, sightings.updated_at, sightings.gbif_key, sightings.occurrence_id, sightings.happened_at, sightings.basis_of_record, sightings.recorded_by, sightings.individual_count, sightings.remarks, sightings.reference_url, sightings.locality, sightings.state_province, sightings.country, sightings.country_code, sightings.latitude, sightings.longitude, sightings.coordinate_uncertainty_in_metres, sightings.elevation_in_metres, sightings.species_id, sightings.weather_id, sightings.media, species.id, species.created_at, species.updated_at, species.gbif_key, species.kingdom, species.phylum, species.class, species."order", species.family, species.genus, species.species, species.rank, species.scientific_name, species.canonical_name, species.vernacular_name, weather.id, weather.created_at, weather.updated_at, weather.observed_at, weather.temperature, weather.apparent_temperature, weather.humidity, weather.precipitation, weather.rain, weather.snowfall, weather.cloud_cover, weather.wind_speed, weather.wind_gusts, weather.wind_direction, weather.condition_code, weather.condition
 FROM sightings
@@ -371,4 +383,60 @@ func (q *Queries) SightingList(ctx context.Context, arg SightingListParams) ([]S
 		return nil, err
 	}
 	return items, nil
+}
+
+const sightingUpdate = `-- name: SightingUpdate :execrows
+UPDATE sightings SET
+	happened_at = ?,
+	recorded_by = ?,
+	individual_count = ?,
+	remarks = ?,
+	locality = ?,
+	state_province = ?,
+	country = ?,
+	country_code = ?,
+	latitude = ?,
+	longitude = ?,
+	species_id = ?,
+	media = ?,
+	updated_at = CURRENT_TIMESTAMP
+WHERE id = ?
+`
+
+type SightingUpdateParams struct {
+	HappenedAt      time.Time `db:"happened_at" json:"happened_at"`
+	RecordedBy      string    `db:"recorded_by" json:"recorded_by"`
+	IndividualCount *int      `db:"individual_count" json:"individual_count"`
+	Remarks         string    `db:"remarks" json:"remarks"`
+	Locality        string    `db:"locality" json:"locality"`
+	StateProvince   string    `db:"state_province" json:"state_province"`
+	Country         string    `db:"country" json:"country"`
+	CountryCode     string    `db:"country_code" json:"country_code"`
+	Latitude        float64   `db:"latitude" json:"latitude"`
+	Longitude       float64   `db:"longitude" json:"longitude"`
+	SpeciesID       uuid.UUID `db:"species_id" json:"species_id"`
+	Media           string    `db:"media" json:"media"`
+	ID              uuid.UUID `db:"id" json:"id"`
+}
+
+func (q *Queries) SightingUpdate(ctx context.Context, arg SightingUpdateParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, sightingUpdate,
+		arg.HappenedAt,
+		arg.RecordedBy,
+		arg.IndividualCount,
+		arg.Remarks,
+		arg.Locality,
+		arg.StateProvince,
+		arg.Country,
+		arg.CountryCode,
+		arg.Latitude,
+		arg.Longitude,
+		arg.SpeciesID,
+		arg.Media,
+		arg.ID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }

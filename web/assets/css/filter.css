@@ -1,0 +1,123 @@
+/* block: filter — copy to web/assets/css/filter.css. See filter.md. */
+
+/* Tune from the site's own tokens, on :root or on one .filter:
+     --chip-bg, --chip-fg                a chip at rest
+     --chip-active-bg, --chip-active-fg  a ticked chip */
+
+/* The hidden attribute loses to any display rule on the item, so put it back on top. */
+[hidden] {
+	display: none !important;
+}
+
+.filter {
+	display: grid;
+	gap: 0.75rem;
+	margin: 0 0 1.5rem;
+}
+
+.filter__search input {
+	width: 100%;
+	max-width: 24rem;
+	padding: 0.5rem 0.9rem;
+	border: 1px solid currentColor;
+	border-radius: 999px;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+}
+
+.filter__group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.filter__group legend {
+	margin-bottom: 0.25rem;
+	padding: 0;
+	font-size: 0.8125rem;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	opacity: 0.7;
+}
+
+/* Phones: one row that scrolls sideways rather than wrapping into a wall. */
+@media (max-width: 640px) {
+	.filter__group {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		padding-bottom: 0.25rem;
+		scrollbar-width: none;
+	}
+}
+
+.chip {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35em;
+	padding: 0.35rem 0.8rem;
+	border: 1px solid currentColor;
+	border-radius: 999px;
+	background: var(--chip-bg, transparent);
+	color: var(--chip-fg, inherit);
+	font-size: 0.875rem;
+	white-space: nowrap;
+	cursor: pointer;
+	user-select: none;
+}
+
+/* The checkbox is there for the keyboard and the screen reader; the chip is what shows. */
+.chip input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.chip small {
+	opacity: 0.6;
+}
+
+.chip:has(input:checked) {
+	background: var(--chip-active-bg, #1a1a1a);
+	color: var(--chip-active-fg, #fff);
+}
+
+.chip:has(input:focus-visible) {
+	outline: 2px solid currentColor;
+	outline-offset: 2px;
+}
+
+.filter__status {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin: 0;
+	font-size: 0.875rem;
+}
+
+.filter__status button {
+	padding: 0.25rem 0.75rem;
+	border: 1px solid currentColor;
+	border-radius: 999px;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
+/* The search box's label, for screen readers only. Drop it if the site has one. */
+.filter .visually-hidden {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}

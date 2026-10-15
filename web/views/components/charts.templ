@@ -1,0 +1,34 @@
+package components
+
+import (
+	"strconv"
+	"workshop/internal/domain/sighting"
+)
+
+templ Columns(cols []YearColumn) {
+	if len(cols) > 0 {
+		<ol class="columns" aria-label="Sightings per year">
+			for _, c := range cols {
+				<li class="columns__col" style={ column(c) }>
+					<span class="columns__count">{ strconv.Itoa(c.Count) }</span>
+					<span class="columns__bar" aria-hidden="true"></span>
+					<span class="columns__year">{ "’" + strconv.Itoa(c.Year % 100) }</span>
+					<span class="visually-hidden">{ strconv.Itoa(c.Count) } sightings in { strconv.Itoa(c.Year) }</span>
+				</li>
+			}
+		</ol>
+	}
+}
+
+templ Bars(rows []sighting.Tally) {
+	if len(rows) > 0 {
+		<ol class="bars">
+			for _, row := range rows {
+				<li class="bars__row" style={ bar(row.Count, rows[0].Count) }>
+					<span class="bars__name">{ row.Name }</span>
+					<span class="bars__count">{ row.Count }</span>
+				</li>
+			}
+		</ol>
+	}
+}

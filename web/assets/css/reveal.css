@@ -1,0 +1,24 @@
+/* block: reveal — copy to web/assets/css/reveal.css. See reveal.md. */
+
+/* Only hidden when the layout has set html.js, so without JS nothing is. */
+.js .reveal {
+	opacity: 0;
+	transform: translateY(var(--reveal-distance, 1.5rem));
+	transition:
+		opacity 0.6s ease-out,
+		transform 0.6s ease-out;
+	transition-delay: var(--reveal-delay, 0ms);
+}
+
+.js .reveal.is-visible {
+	opacity: 1;
+	transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.js .reveal {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+}
