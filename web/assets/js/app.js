@@ -21,6 +21,46 @@
 		});
 	}
 
+	const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+	// A photo that won't load is hidden rather than shown broken.
+	document.addEventListener(
+		'error',
+		function (e) {
+			if (e.target.tagName === 'IMG') e.target.classList.add('is-broken');
+		},
+		true,
+	);
+
+	// The hero's backdrop: a different animal every 5 seconds, the featured card in step.
+	const backdrop = document.querySelector('[data-slides]');
+	if (backdrop && !still) {
+		const slides = Array.from(backdrop.querySelectorAll('img'));
+		const card = document.querySelector('[data-featured]');
+		let at = 0;
+		setInterval(function () {
+			if (document.hidden || slides.length < 2) return;
+			for (let step = 1; step < slides.length; step++) {
+				const next = slides[(at + step) % slides.length];
+				if (!next.complete || !next.naturalWidth) continue;
+				slides[at].classList.remove('is-shown');
+				next.classList.add('is-shown');
+				at = slides.indexOf(next);
+				if (card) {
+					card.classList.add('is-changing');
+					setTimeout(function () {
+						card.href = next.dataset.href;
+						card.querySelector('[data-featured-img]').src = next.src;
+						card.querySelector('[data-featured-name]').textContent = next.dataset.name;
+						card.querySelector('[data-featured-place]').textContent = next.dataset.place;
+						card.classList.remove('is-changing');
+					}, 300);
+				}
+				return;
+			}
+		}, 5000);
+	}
+
 	const list = document.getElementById('sightings-list');
 	if (!list) return;
 
@@ -67,15 +107,126 @@
 		document.getElementById('sightings').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 	}
 
+	// The country dropdown: type to narrow it, arrows and Enter to choose.
+	const panel = document.querySelector('[data-combo-panel]');
+	const toggleList = document.querySelector('[data-combo-toggle]');
+	const none = document.querySelector('[data-combo-none]');
+	const options = panel ? Array.from(panel.querySelectorAll('[role="option"]'), function (el) {
+		const name = el.querySelector('.combo__name');
+		return { el: el, name: name, value: el.dataset.value };
+	}) : [];
+	let active = -1;
+
+	function shown() {
+		return options.filter(function (o) { return !o.el.hidden; });
+	}
+
+	function highlight(o, q) {
+		const at = q ? o.value.toLowerCase().indexOf(q) : -1;
+		o.name.textContent = '';
+		if (at < 0) {
+			o.name.textContent = o.value;
+			return;
+		}
+		const mark = document.createElement('mark');
+		mark.textContent = o.value.slice(at, at + q.length);
+		o.name.append(o.value.slice(0, at), mark, o.value.slice(at + q.length));
+	}
+
+	function refine() {
+		const q = input.value.trim().toLowerCase();
+		options.forEach(function (o) {
+			o.el.hidden = q !== '' && !o.value.toLowerCase().includes(q);
+			o.el.setAttribute('aria-selected', String(o.value.toLowerCase() === q));
+			highlight(o, q);
+		});
+		if (none) none.hidden = shown().length > 0;
+		setActive(-1);
+	}
+
+	function setActive(i) {
+		const vis = shown();
+		options.forEach(function (o) { o.el.classList.remove('is-active'); });
+		active = vis.length ? (i + vis.length) % vis.length : -1;
+		if (i < 0 || active < 0) {
+			active = -1;
+			input.removeAttribute('aria-activedescendant');
+			return;
+		}
+		vis[active].el.classList.add('is-active');
+		vis[active].el.scrollIntoView({ block: 'nearest' });
+		input.setAttribute('aria-activedescendant', vis[active].el.id);
+	}
+
+	function open() {
+		if (!panel || !panel.hidden) return;
+		refine();
+		panel.hidden = false;
+		input.setAttribute('aria-expanded', 'true');
+	}
+
+	function close() {
+		if (!panel || panel.hidden) return;
+		panel.hidden = true;
+		input.setAttribute('aria-expanded', 'false');
+		setActive(-1);
+	}
+
+	function choose(value) {
+		input.value = value;
+		close();
+		byCountry(value);
+	}
+
 	let frame = 0;
 	if (form) {
+		input.addEventListener('focus', open);
+		input.addEventListener('click', open);
 		input.addEventListener('input', function () {
+			open();
+			refine();
 			if (!frame) frame = requestAnimationFrame(function () { frame = 0; byCountry(input.value); });
+		});
+		input.addEventListener('keydown', function (e) {
+			if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+				e.preventDefault();
+				open();
+				setActive(active + (e.key === 'ArrowDown' ? 1 : -1));
+			} else if (e.key === 'Enter' && active >= 0) {
+				e.preventDefault();
+				choose(shown()[active].value);
+			} else if (e.key === 'Escape') {
+				if (panel && !panel.hidden) close();
+				else if (input.value) choose('');
+			} else if (e.key === 'Tab') {
+				close();
+			}
 		});
 		form.addEventListener('submit', function (e) {
 			e.preventDefault();
+			close();
 			byCountry(input.value);
 			jump();
+		});
+	}
+
+	if (panel) {
+		// mousedown, so the input keeps focus and the panel isn't closed under the click.
+		panel.addEventListener('mousedown', function (e) {
+			e.preventDefault();
+			const option = e.target.closest('[role="option"]');
+			if (option) choose(option.dataset.value);
+		});
+		toggleList.addEventListener('click', function () {
+			if (panel.hidden) {
+				input.focus();
+				open();
+			} else {
+				close();
+			}
+		});
+		document.addEventListener('pointerdown', function (e) {
+			if (!e.target.closest('[data-combo]')) close();
 		});
 	}
 
@@ -159,4 +310,103 @@
 			localStorage.setItem('sightings:ratings', JSON.stringify(ratings));
 		}
 	});
+
+	// Grid or gallery: the gallery is the same list, one animal at a time.
+	const viewButtons = document.querySelectorAll('[data-view]');
+	const controls = document.querySelector('[data-carousel-controls]');
+	const play = document.querySelector('[data-carousel="play"]');
+	const playLabel = document.querySelector('[data-carousel-label]');
+	const counter = document.querySelector('[data-carousel-count]');
+	let timer = 0;
+
+	function visible() {
+		return items.filter(function (i) { return !i.el.hidden; });
+	}
+
+	function current() {
+		const middle = list.scrollLeft + list.clientWidth / 2;
+		let best = 0, gap = Infinity;
+		visible().forEach(function (item, i) {
+			const d = Math.abs(item.el.offsetLeft + item.el.offsetWidth / 2 - middle);
+			if (d < gap) { gap = d; best = i; }
+		});
+		return best;
+	}
+
+	function go(i) {
+		const vis = visible();
+		if (!vis.length) return;
+		const el = vis[(i + vis.length) % vis.length].el;
+		list.scrollTo({ left: el.offsetLeft - (list.clientWidth - el.offsetWidth) / 2, behavior: still ? 'auto' : 'smooth' });
+	}
+
+	function count() {
+		if (!counter || !list.classList.contains('is-gallery')) return;
+		const vis = visible();
+		counter.textContent = vis.length ? (current() + 1) + ' of ' + vis.length + ' · ' + vis[current()].data.name : '';
+	}
+
+	function setPlaying(on) {
+		clearInterval(timer);
+		timer = on ? setInterval(function () { if (!document.hidden) go(current() + 1); }, 5000) : 0;
+		if (play) play.setAttribute('aria-pressed', String(on));
+		if (playLabel) playLabel.textContent = on ? 'Pause' : 'Play';
+	}
+
+	function setView(view) {
+		const gallery = view === 'gallery';
+		list.classList.toggle('is-gallery', gallery);
+		viewButtons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.view === view)); });
+		if (controls) controls.hidden = !gallery;
+		if (gallery) {
+			list.tabIndex = 0;
+			list.setAttribute('aria-roledescription', 'carousel');
+			list.scrollLeft = 0;
+		} else {
+			list.removeAttribute('tabindex');
+			list.removeAttribute('aria-roledescription');
+			setPlaying(false);
+		}
+		count();
+		localStorage.setItem('sightings:view', view);
+	}
+
+	viewButtons.forEach(function (b) {
+		b.addEventListener('click', function () { setView(b.dataset.view); });
+	});
+
+	document.querySelectorAll('[data-carousel]').forEach(function (b) {
+		b.addEventListener('click', function () {
+			const action = b.dataset.carousel;
+			if (action === 'play') return setPlaying(!timer);
+			go(current() + (action === 'next' ? 1 : -1));
+			if (timer) setPlaying(true);
+		});
+	});
+
+	list.addEventListener('keydown', function (e) {
+		if (!list.classList.contains('is-gallery') || e.target !== list) return;
+		if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+			e.preventDefault();
+			go(current() + (e.key === 'ArrowRight' ? 1 : -1));
+		}
+	});
+
+	// Grabbing the gallery to swipe it stops the play.
+	list.addEventListener('pointerdown', function (e) {
+		if (timer && !e.target.closest('button, a')) setPlaying(false);
+	});
+
+	let counting = 0;
+	list.addEventListener('scroll', function () {
+		if (!counting) counting = requestAnimationFrame(function () { counting = 0; count(); });
+	}, { passive: true });
+
+	document.addEventListener('sightings:filter', function () {
+		if (!list.classList.contains('is-gallery')) return;
+		list.scrollLeft = 0;
+		count();
+	});
+
+	setView(localStorage.getItem('sightings:view') === 'gallery' ? 'gallery' : 'grid');
 })();

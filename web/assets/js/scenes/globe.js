@@ -156,7 +156,7 @@ mount('globe', function ({ THREE, scene, camera, renderer, canvas, colour, still
 	controls.enableDamping = true;
 	controls.rotateSpeed = 0.5;
 	controls.autoRotate = !still;
-	controls.autoRotateSpeed = 0.6;
+	controls.autoRotateSpeed = 0.35;
 
 	// Click without dragging: pick the country under the pointer.
 	const ray = new THREE.Raycaster();
@@ -191,12 +191,27 @@ mount('globe', function ({ THREE, scene, camera, renderer, canvas, colour, still
 
 		target = (best >= 0 ? units[best] : unit).clone();
 		controls.autoRotate = false;
+		syncSpin();
 		document.dispatchEvent(new CustomEvent('globe:pick', { detail: { country } }));
 	});
 
 	document.addEventListener('sightings:filter', function (e) {
 		selected = ((e.detail && e.detail.country) || '').toLowerCase();
 		paint();
+		// Turn to face the country's sightings, wherever the pick came from.
+		const centre = new THREE.Vector3();
+		points.forEach(function (p, i) {
+			if ((p.country || '').toLowerCase() === selected) centre.add(units[i]);
+		});
+		if (selected && centre.lengthSq() > 0) {
+			target = centre.normalize();
+			controls.autoRotate = false;
+			syncSpin();
+			if (still) {
+				camera.position.copy(target).multiplyScalar(distance);
+				camera.lookAt(0, 0, 0);
+			}
+		}
 		if (still) renderer.render(scene, camera);
 	});
 
@@ -211,16 +226,18 @@ mount('globe', function ({ THREE, scene, camera, renderer, canvas, colour, still
 	});
 
 	const spin = document.querySelector('[data-globe="spin"]');
+	function syncSpin() {
+		if (!spin) return;
+		spin.setAttribute('aria-pressed', String(!controls.autoRotate));
+		spin.setAttribute('aria-label', controls.autoRotate ? 'Pause spinning' : 'Start spinning');
+	}
 	document.querySelectorAll('[data-globe]').forEach(function (btn) {
 		btn.addEventListener('click', function () {
 			const action = btn.dataset.globe;
 			if (action === 'in') distance = Math.max(3, distance - 0.6);
 			if (action === 'out') distance = Math.min(8, distance + 0.6);
 			if (action === 'spin') controls.autoRotate = !controls.autoRotate && !still;
-			if (spin) {
-				spin.setAttribute('aria-pressed', String(!controls.autoRotate));
-				spin.setAttribute('aria-label', controls.autoRotate ? 'Pause spinning' : 'Start spinning');
-			}
+			syncSpin();
 			if (still) {
 				camera.position.setLength(distance);
 				renderer.render(scene, camera);

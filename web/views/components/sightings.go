@@ -1,7 +1,9 @@
 package components
 
 import (
+	"cmp"
 	"fmt"
+	"math/rand/v2"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -44,15 +46,58 @@ func Cover(s sighting.Sighting) (sighting.Media, bool) {
 	return sighting.Media{}, false
 }
 
-// Featured is the first sighting with a photo.
-func Featured(sightings []sighting.Sighting) (sighting.Sighting, bool) {
-	for _, s := range sightings {
-		if _, ok := Cover(s); ok {
-			return s, true
+// Slide is one photo in the hero's rotating backdrop.
+type Slide struct {
+	URL   string
+	Name  string
+	Place string
+	ID    string
+}
+
+// Slides picks up to n random sightings with a photo, one per animal.
+func Slides(sightings []sighting.Sighting, n int) []Slide {
+	slides := make([]Slide, 0, n)
+	seen := make(map[string]bool)
+	for _, i := range rand.Perm(len(sightings)) {
+		s := sightings[i]
+		photo, ok := Cover(s)
+		if !ok || seen[Name(s)] {
+			continue
+		}
+		seen[Name(s)] = true
+		slides = append(slides, Slide{URL: photo.URL, Name: Name(s), Place: cmp.Or(s.Location.Country, "Somewhere wild"), ID: ItemID(s)})
+		if len(slides) == n {
+			break
 		}
 	}
-	return sighting.Sighting{}, false
+	return slides
 }
+
+// CountryOption is a country in the search's dropdown.
+type CountryOption struct {
+	Name  string
+	Code  string
+	Count int
+}
+
+// CountryOptions lists every country with a sighting, most seen first.
+func CountryOptions(sightings []sighting.Sighting) []CountryOption {
+	codes := make(map[string]string)
+	for _, s := range sightings {
+		if s.Location.Country != "" && codes[s.Location.Country] == "" {
+			codes[s.Location.Country] = s.Location.CountryCode.String()
+		}
+	}
+	tallies := Countries(sightings)
+	options := make([]CountryOption, len(tallies))
+	for i, t := range tallies {
+		options[i] = CountryOption{Name: t.Name, Code: codes[t.Name], Count: t.Count}
+	}
+	return options
+}
+
+// ItemID is the id of a sighting's place in the list, for links to it.
+func ItemID(s sighting.Sighting) string { return "s-" + s.ID.String() }
 
 // Name is the animal's name as the card shows it.
 func Name(s sighting.Sighting) string { return displayName(s.Species) }
@@ -60,6 +105,7 @@ func Name(s sighting.Sighting) string { return displayName(s.Species) }
 // ItemAttrs marks a list item with what the search and "similar" match on.
 func ItemAttrs(s sighting.Sighting) templ.Attributes {
 	return templ.Attributes{
+		"id":           ItemID(s),
 		"data-id":      s.ID.String(),
 		"data-name":    displayName(s.Species),
 		"data-country": strings.ToLower(s.Location.Country),
@@ -81,4 +127,12 @@ func photoCount(s sighting.Sighting) int {
 
 func gbifURL(s sighting.Sighting) templ.SafeURL {
 	return templ.URL(fmt.Sprintf("https://www.gbif.org/occurrence/%d", s.GBIFKey))
+}
+
+// SightingCount says how many sightings, in words.
+func SightingCount(n int) string {
+	if n == 1 {
+		return "1 sighting"
+	}
+	return fmt.Sprintf("%d sightings", n)
 }

@@ -43,6 +43,16 @@ from Google Fonts.
   popular-country chips; dotted 3D globe right (drag to spin, click a dot to pick its country,
   zoom/pause buttons stacked on the right like the shot's social buttons); stat tiles bottom
   left; glass "featured" card bottom right.
+- **Hero backdrop**: up to 6 random sighting photos (one per animal, re-picked each visit) fill
+  the hero behind everything, cross-fading every 5 seconds, washed with the page colour from the
+  left and faded out at top and bottom. The glass featured card changes with them. Still under
+  reduced motion.
+- **Country dropdown**: the search pill opens a rounded panel of every country with sightings: a
+  green code badge, the name with the typed letters in bold moss, and a count. Arrows, Enter and
+  Escape work; picking one turns the globe to face it.
+- **Grid / Gallery switch** above the list (black pill = current). Gallery is the same list as one
+  big card at a time, photo left and details right (stacked on phones), with previous / Play-Pause
+  / next and "3 of 100 · Lion". Play advances every 5 seconds; the choice is remembered.
 - **Sightings**: a photo wall, each column filling top to bottom (CSS columns): 4 from 1024px, 2
   below. Cards keep each photo's own shape, capped at 440px tall.
 - **Card actions**: like (heart), 1–5 star rating, "Similar" (same family, then order, then class),

@@ -15,24 +15,69 @@ templ Home(sightings []sighting.Sighting) {
 	}) {
 		{{ summary := sighting.Summarise(sightings) }}
 		{{ countries := components.Countries(sightings) }}
+		{{ slides := components.Slides(sightings, 6) }}
 		<section class="hero" aria-labelledby="hero-title">
+			if len(slides) > 0 {
+				<div class="hero__backdrop" aria-hidden="true" data-slides>
+					for i, sl := range slides {
+						<img
+							src={ sl.URL }
+							alt=""
+							class={ templ.KV("is-shown", i == 0) }
+							if i > 0 {
+								loading="lazy"
+							}
+							decoding="async"
+							data-name={ sl.Name }
+							data-place={ sl.Place }
+							data-href={ "#" + sl.ID }
+						/>
+					}
+				</div>
+			}
 			<div class="hero__text">
 				<p class="eyebrow">Wildlife sightings from GBIF</p>
-				<h1 id="hero-title">Every animal spotted, on one living globe</h1>
+				<h1 id="hero-title">They live among us.</h1>
 				<p class="lede">Spin the globe or search a country to see what people have seen there, from lions on the savannah to whales off the coast.</p>
-				<form class="search" role="search" action="/#sightings" data-search>
-					<label class="visually-hidden" for="country-search">Search sightings by country</label>
-					<svg class="icon search__icon" aria-hidden="true"><use href="#i-search"></use></svg>
-					<input id="country-search" type="search" name="country" list="countries" placeholder="Search a country…" autocomplete="off"/>
-					<button class="icon-btn" type="submit" aria-label="Show sightings">
-						<svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
-					</button>
-					<datalist id="countries">
-						for _, c := range countries {
-							<option value={ c.Name }></option>
-						}
-					</datalist>
-				</form>
+				<div class="combo" data-combo>
+					<form class="search" role="search" action="/#sightings" data-search>
+						<label class="visually-hidden" for="country-search">Where did you see them? Choose a country</label>
+						<svg class="icon search__icon" aria-hidden="true"><use href="#i-pin"></use></svg>
+						<input
+							id="country-search"
+							type="search"
+							name="country"
+							placeholder="Where did you see them?"
+							autocomplete="off"
+							role="combobox"
+							aria-autocomplete="list"
+							aria-expanded="false"
+							aria-controls="country-list"
+						/>
+						<button class="combo__toggle" type="button" tabindex="-1" aria-label="Show all countries" data-combo-toggle>
+							<svg class="icon" aria-hidden="true"><use href="#i-chevron"></use></svg>
+						</button>
+						<button class="icon-btn" type="submit" aria-label="Show sightings">
+							<svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg>
+						</button>
+					</form>
+					<div class="combo__panel" data-combo-panel hidden>
+						<p class="combo__head">
+							<span>Countries with sightings</span>
+							<span>{ len(countries) }</span>
+						</p>
+						<ul id="country-list" class="combo__list" role="listbox" aria-label="Countries">
+							for i, c := range components.CountryOptions(sightings) {
+								<li class="combo__option" role="option" id={ fmt.Sprintf("country-%d", i) } aria-selected="false" data-value={ c.Name }>
+									<span class="combo__code" aria-hidden="true">{ c.Code }</span>
+									<span class="combo__name">{ c.Name }</span>
+									<span class="combo__count">{ components.SightingCount(c.Count) }</span>
+								</li>
+							}
+						</ul>
+						<p class="combo__none" data-combo-none hidden>No sightings there yet. Try another country.</p>
+					</div>
+				</div>
 				if len(countries) > 0 {
 					<ul class="chips" aria-label="Popular countries">
 						for _, c := range topN(countries, 5) {
@@ -70,14 +115,14 @@ templ Home(sightings []sighting.Sighting) {
 					<small>Every dot on the globe is someone who stopped, looked and wrote it down.</small>
 				</li>
 			</ul>
-			if f, ok := components.Featured(sightings); ok {
-				{{ photo, _ := components.Cover(f) }}
-				<a class="featured" href="#sightings">
-					<img src={ photo.URL } alt="" loading="lazy" decoding="async"/>
+			if len(slides) > 0 {
+				<a class="featured" href={ templ.URL("#" + slides[0].ID) } data-featured>
+					<img src={ slides[0].URL } alt="" decoding="async" data-featured-img/>
 					<span class="featured__text">
-						<span class="featured__title">{ components.Name(f) }</span>
+						<span class="featured__eyebrow">Spotted in <span data-featured-place>{ slides[0].Place }</span></span>
+						<span class="featured__title" data-featured-name>{ slides[0].Name }</span>
 						<span class="featured__rule" aria-hidden="true"></span>
-						<span class="featured__more">See all sightings <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
+						<span class="featured__more">See this sighting <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></span>
 					</span>
 				</a>
 			}
@@ -88,15 +133,41 @@ templ Home(sightings []sighting.Sighting) {
 					<p class="eyebrow">The field log</p>
 					<h2 id="listing-title">Recent sightings</h2>
 				</div>
-				<p class="listing__status">
-					<output aria-live="polite" data-status>{ fmt.Sprintf("All %d sightings", len(sightings)) }</output>
-					<button class="pill pill--soft pill--small" type="button" data-clear hidden>Show all</button>
-				</p>
+				<div class="listing__tools">
+					<p class="listing__status">
+						<output aria-live="polite" data-status>{ fmt.Sprintf("All %d sightings", len(sightings)) }</output>
+						<button class="pill pill--soft pill--small" type="button" data-clear hidden>Show all</button>
+					</p>
+					<div class="view-switch" role="group" aria-label="How to show the sightings">
+						<button type="button" aria-pressed="true" data-view="grid">
+							<svg class="icon" aria-hidden="true"><use href="#i-grid"></use></svg>
+							Grid
+						</button>
+						<button type="button" aria-pressed="false" data-view="gallery">
+							<svg class="icon" aria-hidden="true"><use href="#i-gallery"></use></svg>
+							Gallery
+						</button>
+					</div>
+				</div>
+			</div>
+			<div class="carousel-controls" data-carousel-controls hidden>
+				<button class="icon-btn icon-btn--light" type="button" aria-label="Previous animal" data-carousel="prev">
+					<svg class="icon" aria-hidden="true"><use href="#i-prev"></use></svg>
+				</button>
+				<button class="pill pill--dark" type="button" aria-pressed="false" data-carousel="play">
+					<svg class="icon icon--play" aria-hidden="true"><use href="#i-play"></use></svg>
+					<svg class="icon icon--pause" aria-hidden="true"><use href="#i-pause"></use></svg>
+					<span data-carousel-label>Play</span>
+				</button>
+				<button class="icon-btn icon-btn--light" type="button" aria-label="Next animal" data-carousel="next">
+					<svg class="icon" aria-hidden="true"><use href="#i-next"></use></svg>
+				</button>
+				<output class="carousel-count" aria-live="polite" data-carousel-count></output>
 			</div>
 			if len(sightings) == 0 {
 				<p class="empty">No sightings have been ingested yet.</p>
 			} else {
-				<ul id="sightings-list" class="masonry">
+				<ul id="sightings-list" class="masonry" aria-label="Sightings">
 					for _, s := range sightings {
 						<li { components.ItemAttrs(s)... }>
 							@components.SightingCard(s)
