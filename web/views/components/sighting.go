@@ -51,3 +51,11 @@ func SightingURL(s sighting.Sighting) templ.SafeURL {
 func altText(m sighting.Media) string {
 	return cmp.Or(m.Title, m.Description, "Sighting photo")
 }
+
+// credit names who took a photo, for the lightbox caption.
+func credit(m sighting.Media) string {
+	if m.Creator == "" {
+		return ""
+	}
+	return "© " + m.Creator
+}

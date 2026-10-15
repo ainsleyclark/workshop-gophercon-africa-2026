@@ -9,9 +9,9 @@ templ Gallery(items []sighting.Media) {
 		<ul class="gallery">
 			for _, m := range items {
 				<li class="gallery__item">
-					<figure class="gallery__item">
+					<figure>
 						if m.Type == "StillImage" {
-							<a href={ templ.URL(m.URL) } rel="noopener" target="_blank">
+							<a class="gallery__photo" href={ templ.URL(m.URL) } data-lightbox data-caption={ credit(m) }>
 								<img src={ m.URL } alt={ altText(m) } loading="lazy"/>
 							</a>
 						} else {

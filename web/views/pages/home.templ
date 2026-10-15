@@ -14,51 +14,164 @@ type HomeProps struct {
 }
 
 templ Home(props HomeProps) {
+	{{ photos := heroPhotos(props.Sightings, 16) }}
+	{{ spot, hasSpot := spotlight(props.Sightings) }}
 	@layout.Base(layout.BaseProps{
 		Title:       "Sightings",
-		Description: "A field guide to wildlife sightings recorded around the world.",
+		Description: "A living field guide to wildlife sightings recorded around the world.",
 		Current:     "home",
+		Overlay:     true,
 	}) {
-		<section class="hero">
-			<div class="container">
-				<span class="hero__eyebrow">Field notes</span>
-				<h1>Every animal, <em>where it was seen</em></h1>
-				<p class="hero__lead">
-					A living field guide of wildlife sightings: who spotted what, where and when. Browse the latest, or add one of your own.
+		<section class="hero" aria-labelledby="hero-title">
+			<div class="hero__wall" aria-hidden="true">
+				@marquee(half(photos, 0), false)
+				@marquee(half(photos, 1), true)
+			</div>
+			<div class="hero__shade" aria-hidden="true"></div>
+			<div class="container hero__inner">
+				<p class="hero__eyebrow">
+					<span class="pulse" aria-hidden="true"></span>
+					Live from the field · { strconv.Itoa(props.Summary.Sightings) } records
 				</p>
-				<div class="hero__actions">
-					<a class="button" href="#sightings">Browse sightings</a>
-					<a class="button button--ghost" href="/sightings/new">
-						@components.IconPlus()
-						Add a sighting
-					</a>
-				</div>
+				<h1 id="hero-title" class="hero__title">
+					The wild,
+					<em>as it was seen.</em>
+				</h1>
+				<p class="hero__lead">
+					A living field guide of wildlife sightings from { strconv.Itoa(props.Summary.Countries) } countries. Who spotted what, where, and when, told one photograph at a time.
+				</p>
+				<form class="hero__search" action="/" method="get" role="search" data-hero-search>
+					@components.IconSearch()
+					<label class="visually-hidden" for="hero-q">Search sightings</label>
+					<input id="hero-q" name="q" type="search" placeholder="Try “leopard”, “Kenya” or “whale”…" autocomplete="off"/>
+					<button class="button" type="submit">Explore</button>
+				</form>
 				if props.Notice != "" {
-					<p class="notice" role="status">
+					<p class="notice notice--glass" role="status">
 						@components.IconCheck()
 						{ props.Notice }
 					</p>
 				}
-				<dl class="stats">
-					@stat("Sightings", strconv.Itoa(props.Summary.Sightings))
-					@stat("Species", strconv.Itoa(props.Summary.Species))
-					@stat("Countries", strconv.Itoa(props.Summary.Countries))
-					@stat("Observers", strconv.Itoa(props.Summary.Recorders))
+				<dl class="hero__stats">
+					@stat("Sightings", props.Summary.Sightings)
+					@stat("Species", props.Summary.Species)
+					@stat("Countries", props.Summary.Countries)
+					@stat("Observers", props.Summary.Recorders)
 				</dl>
 			</div>
+			<a class="hero__scroll" href="#spotlight" aria-label="Scroll to the latest sighting">
+				<span></span>
+			</a>
 		</section>
-		<section class="section" id="sightings">
-			<div class="container">
-				<div class="section__head">
-					<div>
-						<h2>Latest sightings</h2>
-						if span := dateSpan(props.Summary); span != "" {
-							<p>{ span }</p>
+		if hasSpot {
+			<section class="section spotlight reveal" id="spotlight" aria-labelledby="spotlight-title">
+				<div class="container spotlight__inner">
+					<a class="spotlight__photo" href={ components.SightingURL(spot) }>
+						if photo, ok := components.CoverPhoto(spot); ok {
+							<img src={ photo.URL } alt={ components.DisplayName(spot.Species) } loading="lazy"/>
 						}
+						<span class="spotlight__stamp">Latest</span>
+					</a>
+					<div class="spotlight__text">
+						<p class="kicker">Latest from the field</p>
+						<h2 id="spotlight-title" class="spotlight__title">{ components.DisplayName(spot.Species) }</h2>
+						if spot.Species.ScientificName != "" {
+							<p class="spotlight__scientific">{ spot.Species.ScientificName }</p>
+						}
+						<ul class="facts facts--large">
+							<li>
+								@components.IconPin()
+								<span>{ components.Place(spot.Location) }</span>
+							</li>
+							<li>
+								@components.IconCalendar()
+								<span>{ spot.HappenedAt.Format("Monday 2 January 2006") }</span>
+							</li>
+							if spot.RecordedBy != "" {
+								<li>
+									@components.IconUser()
+									<span>Recorded by { spot.RecordedBy }</span>
+								</li>
+							}
+						</ul>
+						<a class="button button--large" href={ components.SightingURL(spot) }>
+							Read the full record
+							@components.IconArrowRight()
+						</a>
 					</div>
+				</div>
+			</section>
+		}
+		if len(props.Sightings) > 0 {
+			<section class="section section--tinted" id="map" aria-labelledby="map-title">
+				<div class="container">
+					<div class="section__head reveal">
+						<div>
+							<p class="kicker">Explore</p>
+							<h2 id="map-title" class="section__title">A world of sightings</h2>
+							<p class="section__lead">Every dot is an animal someone stopped to record. Zoom in, open a cluster, follow a trail. The map follows your filters below.</p>
+						</div>
+					</div>
+					<div class="map-frame reveal">
+						@components.Map(components.MapProps{
+							Points:  components.MapPoints(props.Sightings),
+							Cluster: true,
+							Label:   "Map of where each sighting was recorded",
+						})
+					</div>
+				</div>
+			</section>
+			<section class="section" id="insights" aria-labelledby="insights-title">
+				<div class="container">
+					<div class="section__head reveal">
+						<div>
+							<p class="kicker">By the numbers</p>
+							<h2 id="insights-title" class="section__title">What the field notes say</h2>
+						</div>
+					</div>
+					<div class="bento">
+						<article class="tile tile--wide reveal">
+							<h3 class="tile__title">Sightings per year</h3>
+							<p class="tile__lead">{ dateSpan(props.Summary) }</p>
+							@components.Columns(components.YearColumns(props.Sightings, props.Summary, 11))
+						</article>
+						<article class="tile tile--feature reveal" style="--reveal-delay: 120ms">
+							<p class="tile__big"><span data-count={ strconv.Itoa(props.Summary.Media) }>{ strconv.Itoa(props.Summary.Media) }</span></p>
+							<p class="tile__caption">photographs and recordings, each credited to the person who took it.</p>
+							@components.IconBinoculars()
+						</article>
+						<article class="tile reveal">
+							<h3 class="tile__title">Most-seen animals</h3>
+							@components.Bars(components.TopAnimals(props.Sightings, 6))
+						</article>
+						<article class="tile reveal" style="--reveal-delay: 120ms">
+							<h3 class="tile__title">Top countries</h3>
+							@components.Bars(components.TopCountries(props.Sightings, 6))
+						</article>
+						<article class="tile reveal" style="--reveal-delay: 240ms">
+							<h3 class="tile__title">Busiest observers</h3>
+							@components.Bars(components.TopObservers(props.Sightings, 6))
+						</article>
+					</div>
+				</div>
+			</section>
+		}
+		<section class="section collection" id="collection" aria-labelledby="collection-title">
+			<div class="container">
+				<div class="section__head reveal">
+					<div>
+						<p class="kicker">The collection</p>
+						<h2 id="collection-title" class="section__title">Every sighting</h2>
+						<p class="section__lead">Search, filter by animal or country, and open any card for the full record.</p>
+					</div>
+					<a class="button button--ghost" href="/sightings/new">
+						@components.IconPlus()
+						Add yours
+					</a>
 				</div>
 				if len(props.Sightings) == 0 {
 					<div class="empty">
+						@components.IconBinoculars()
 						<h3>No sightings yet</h3>
 						<p>Nothing has been recorded so far. Be the first to add one.</p>
 						<a class="button" href="/sightings/new">
@@ -67,22 +180,70 @@ templ Home(props HomeProps) {
 						</a>
 					</div>
 				} else {
-					<ul class="sightings">
+					<div class="filter-sentinel" aria-hidden="true"></div>
+					<div class="filter-wrap">
+						@components.Filter(components.FilterProps{
+							Target: "sightings",
+							Search: true,
+							Groups: []components.FilterGroup{
+								{Key: "animal", Label: "Animal", Options: components.FilterOptions(props.Sightings, 14, components.Animal)},
+								{Key: "country", Label: "Country", Options: components.FilterOptions(props.Sightings, 12, components.Country)},
+								{Key: "year", Label: "Year", Options: components.FilterOptions(props.Sightings, 11, components.Year)},
+							},
+						})
+					</div>
+					<ul id="sightings" class="sightings">
 						for _, s := range props.Sightings {
-							<li>
+							<li { components.FilterAttrs(s)... }>
 								@components.SightingCard(s)
 							</li>
 						}
 					</ul>
+					<div class="empty" data-filter-empty="sightings" hidden>
+						@components.IconSearch()
+						<h3>Nothing matches that</h3>
+						<p>Try fewer filters, or a different word.</p>
+						<button class="button button--ghost" type="button" data-filter-reset="sightings">Clear filters</button>
+					</div>
 				}
+			</div>
+		</section>
+		<section class="cta reveal" aria-labelledby="cta-title">
+			<div class="container cta__inner">
+				<div>
+					<h2 id="cta-title" class="cta__title">Seen something wild?</h2>
+					<p>A bird on the balcony or a leopard at dusk: add it to the guide, and it joins the map.</p>
+				</div>
+				<a class="button button--light button--large" href="/sightings/new">
+					@components.IconPlus()
+					Add a sighting
+				</a>
 			</div>
 		</section>
 	}
 }
 
-templ stat(label, value string) {
-	<div class="stat">
+templ stat(label string, value int) {
+	<div class="hero__stat">
 		<dt>{ label }</dt>
-		<dd>{ value }</dd>
+		<dd data-count={ strconv.Itoa(value) }>{ strconv.Itoa(value) }</dd>
 	</div>
+}
+
+templ marquee(photos []sighting.Sighting, reverse bool) {
+	if len(photos) > 0 {
+		<div class={ "marquee", templ.KV("marquee--reverse", reverse) }>
+			for range 2 {
+				<ul class="marquee__track">
+					for _, s := range photos {
+						if photo, ok := components.CoverPhoto(s); ok {
+							<li class="marquee__item">
+								<img src={ photo.URL } alt="" loading="lazy" decoding="async"/>
+							</li>
+						}
+					}
+				</ul>
+			}
+		</div>
+	}
 }

@@ -47,3 +47,40 @@ func speciesLabel(sp species.Species) string {
 	}
 	return name
 }
+
+// heroPhotos picks up to n sightings with a photo, one per species, newest first.
+func heroPhotos(sightings []sighting.Sighting, n int) []sighting.Sighting {
+	seen := map[string]bool{}
+	var out []sighting.Sighting
+	for _, s := range sightings {
+		name := components.DisplayName(s.Species)
+		if _, ok := components.CoverPhoto(s); !ok || seen[name] {
+			continue
+		}
+		seen[name] = true
+		out = append(out, s)
+		if len(out) == n {
+			break
+		}
+	}
+	return out
+}
+
+// half returns the first or second half of the photos, one per marquee row.
+func half(photos []sighting.Sighting, which int) []sighting.Sighting {
+	mid := (len(photos) + 1) / 2
+	if which == 0 {
+		return photos[:mid]
+	}
+	return photos[mid:]
+}
+
+// spotlight is the newest sighting with a photo.
+func spotlight(sightings []sighting.Sighting) (sighting.Sighting, bool) {
+	for _, s := range sightings {
+		if _, ok := components.CoverPhoto(s); ok {
+			return s, true
+		}
+	}
+	return sighting.Sighting{}, false
+}

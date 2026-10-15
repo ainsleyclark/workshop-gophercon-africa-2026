@@ -8,15 +8,46 @@ import (
 )
 
 templ Sighting(s sighting.Sighting, notice string) {
+	{{ photo, hasPhoto := components.CoverPhoto(s) }}
 	@layout.Base(layout.BaseProps{
 		Title:       components.DisplayName(s.Species),
 		Description: components.DisplayName(s.Species) + " seen in " + components.Place(s.Location),
+		Overlay:     true,
 	}) {
+		<section class={ "record-hero", templ.KV("record-hero--plain", !hasPhoto) }>
+			if hasPhoto {
+				<img class="record-hero__backdrop" src={ photo.URL } alt="" aria-hidden="true"/>
+			}
+			<div class="record-hero__shade" aria-hidden="true"></div>
+			<div class="container record-hero__inner">
+				<a class="back back--light" href="/#collection">
+					@components.IconArrowLeft()
+					All sightings
+				</a>
+				<ul class="chips chips--glass" aria-label="Classification">
+					for _, rank := range []string{s.Species.Class, s.Species.Order, s.Species.Family} {
+						if rank != "" {
+							<li class="chip chip--static">{ rank }</li>
+						}
+					}
+				</ul>
+				<h1 class="record-hero__title">{ components.DisplayName(s.Species) }</h1>
+				if s.Species.ScientificName != "" {
+					<p class="record-hero__scientific">{ s.Species.ScientificName }</p>
+				}
+				<ul class="facts facts--light">
+					<li>
+						@components.IconPin()
+						<span>{ components.Place(s.Location) }</span>
+					</li>
+					<li>
+						@components.IconCalendar()
+						<span>{ s.HappenedAt.Format("2 January 2006") }</span>
+					</li>
+				</ul>
+			</div>
+		</section>
 		<div class="container page">
-			<a class="back" href="/#sightings">
-				@components.IconArrowLeft()
-				All sightings
-			</a>
 			if notice != "" {
 				<p class="notice notice--top" role="status">
 					@components.IconCheck()
@@ -24,10 +55,15 @@ templ Sighting(s sighting.Sighting, notice string) {
 				</p>
 			}
 			<div class="detail">
-				<div class="detail__media">
-					<figure class="detail__hero">
-						if photo, ok := components.CoverPhoto(s); ok {
-							<img src={ photo.URL } alt={ components.DisplayName(s.Species) }/>
+				<div class="detail__main">
+					<figure class="detail__photo reveal">
+						if hasPhoto {
+							<a href={ templ.URL(photo.URL) } data-lightbox data-caption={ components.DisplayName(s.Species) }>
+								<img src={ photo.URL } alt={ components.DisplayName(s.Species) }/>
+							</a>
+							if photo.Creator != "" {
+								<figcaption>Photo © { photo.Creator } · click to enlarge</figcaption>
+							}
 						} else {
 							<div class="photo-empty">
 								@components.IconImage()
@@ -36,30 +72,26 @@ templ Sighting(s sighting.Sighting, notice string) {
 						}
 					</figure>
 					if len(s.Media) > 1 {
-						@components.Gallery(s.Media)
+						<section class="detail__section reveal">
+							<h2 class="detail__heading">All photos <small>{ strconv.Itoa(len(s.Media)) }</small></h2>
+							@components.Gallery(s.Media)
+						</section>
+					}
+					if s.Remarks != "" {
+						<section class="detail__section reveal">
+							<h2 class="detail__heading">Field notes</h2>
+							<blockquote class="remarks">{ s.Remarks }</blockquote>
+						</section>
 					}
 				</div>
-				<div>
-					<h1 class="detail__title">{ components.DisplayName(s.Species) }</h1>
-					if s.Species.ScientificName != "" {
-						<p class="detail__scientific">{ s.Species.ScientificName }</p>
-					}
-					<ul class="chips" aria-label="Classification">
-						for _, rank := range []string{s.Species.Class, s.Species.Order, s.Species.Family} {
-							if rank != "" {
-								<li class="chip">{ rank }</li>
-							}
-						}
-					</ul>
+				<aside class="detail__aside">
 					<section class="panel">
-						<h2>The sighting</h2>
+						<h2>The record</h2>
 						<dl class="meta">
 							<dt>Seen</dt>
-							<dd>{ s.HappenedAt.Format("Monday 2 January 2006, 15:04") }</dd>
+							<dd>{ s.HappenedAt.Format("Mon 2 Jan 2006, 15:04") }</dd>
 							<dt>Where</dt>
 							<dd>{ components.Place(s.Location) }</dd>
-							<dt>Position</dt>
-							<dd><a href={ templ.URL(mapURL(s.Location.Coordinates)) } rel="noopener" target="_blank">{ coordinates(s.Location.Coordinates) }</a></dd>
 							if s.IndividualCount != nil {
 								<dt>Count</dt>
 								<dd>{ components.Individuals(*s.IndividualCount) }</dd>
@@ -68,31 +100,36 @@ templ Sighting(s sighting.Sighting, notice string) {
 								<dt>Recorded by</dt>
 								<dd>{ s.RecordedBy }</dd>
 							}
+							<dt>Position</dt>
+							<dd><a href={ templ.URL(mapURL(s.Location.Coordinates)) } rel="noopener" target="_blank">{ coordinates(s.Location.Coordinates) }</a></dd>
 							if s.ReferenceURL != "" {
 								<dt>Source</dt>
 								<dd><a href={ templ.URL(s.ReferenceURL) } rel="noopener" target="_blank">Original record</a></dd>
 							}
 						</dl>
 					</section>
+					<section class="panel panel--flush">
+						@components.Map(components.MapProps{
+							Points:  components.MapPoints([]sighting.Sighting{s}),
+							ID:      "record-map",
+							Label:   "Where this sighting was recorded",
+							Class:   "map--small",
+							MaxZoom: "8",
+						})
+					</section>
 					if hasWeather(s.Weather) {
-						<section class="panel">
+						<section class="panel weather">
 							<h2>Weather that day</h2>
-							<dl class="meta">
-								if s.Weather.Condition.Description != "" {
-									<dt>Sky</dt>
-									<dd>{ s.Weather.Condition.Description }</dd>
-								}
-								<dt>Temperature</dt>
-								<dd>{ temperature(s.Weather.Temperature) }</dd>
-								<dt>Humidity</dt>
-								<dd>{ strconv.Itoa(s.Weather.Humidity) }%</dd>
+							<p class="weather__temp">{ strconv.FormatFloat(s.Weather.Temperature.Actual, 'f', 0, 64) }°</p>
+							if s.Weather.Condition.Description != "" {
+								<p class="weather__sky">{ s.Weather.Condition.Description }</p>
+							}
+							<dl class="weather__grid">
+								<div><dt>Feels like</dt><dd>{ strconv.FormatFloat(s.Weather.Temperature.Apparent, 'f', 0, 64) }°C</dd></div>
+								<div><dt>Humidity</dt><dd>{ strconv.Itoa(s.Weather.Humidity) }%</dd></div>
+								<div><dt>Wind</dt><dd>{ strconv.FormatFloat(s.Weather.Wind.Speed, 'f', 0, 64) } km/h</dd></div>
+								<div><dt>Cloud</dt><dd>{ strconv.Itoa(s.Weather.CloudCover) }%</dd></div>
 							</dl>
-						</section>
-					}
-					if s.Remarks != "" {
-						<section class="panel">
-							<h2>Notes</h2>
-							<p class="remarks">{ s.Remarks }</p>
 						</section>
 					}
 					<div class="actions">
@@ -105,9 +142,12 @@ templ Sighting(s sighting.Sighting, notice string) {
 							Delete
 						</button>
 					</div>
-				</div>
+				</aside>
 			</div>
 			<dialog class="dialog" id="delete-dialog" aria-labelledby="delete-title">
+				<span class="dialog__icon" aria-hidden="true">
+					@components.IconTrash()
+				</span>
 				<h2 id="delete-title">Delete this sighting?</h2>
 				<p>The { components.DisplayName(s.Species) } seen on { s.HappenedAt.Format("2 January 2006") } will be removed for good.</p>
 				<form method="post" action={ templ.URL("/sightings/" + s.ID.String() + "/delete") } class="actions">
