@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"workshop/internal/cmd/internal/prompt"
 	"workshop/internal/domain/sighting"
+	"workshop/internal/domain/species"
 
 	"github.com/urfave/cli/v3"
 )
@@ -57,14 +58,33 @@ func dbCmd(app *app) *cli.Command {
 			},
 			{
 				Name:  "seed",
-				Usage: "Apply migrations and ingest a starter set of sightings of every recognised animal",
+				Usage: "Apply migrations and seed a starter set, including the four showcase species",
 				Action: func(ctx context.Context, _ *cli.Command) error {
 					if _, err := app.Migrations.Up(ctx); err != nil {
 						return fmt.Errorf("applying migrations: %w", err)
 					}
-					return runIngest(ctx, app, sighting.IngestRequest{
+					if err := runIngest(ctx, app, sighting.IngestRequest{
 						Limit: 500,
-					})
+					}); err != nil {
+						return err
+					}
+					// The general sample is intentionally spread across every known
+					// taxon. Seed the four designed species separately so a fresh
+					// database always gives the showcase map real observation pins.
+					for _, animal := range []species.Animal{
+						species.AnimalSnowLeopard,
+						species.AnimalTiger,
+						species.AnimalGiantPanda,
+						species.AnimalLion,
+					} {
+						if err := runIngest(ctx, app, sighting.IngestRequest{
+							Limit:   100,
+							Animals: []species.Animal{animal},
+						}); err != nil {
+							return err
+						}
+					}
+					return nil
 				},
 			},
 			migrateCmd(app),

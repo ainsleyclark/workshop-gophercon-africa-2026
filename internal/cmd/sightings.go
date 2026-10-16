@@ -114,6 +114,11 @@ func sightingsCmd(app *app) *cli.Command {
 				Flags: []cli.Flag{
 					countryFlag("two letter ISO country code, e.g. KE, leave out for anywhere"),
 					limitFlag(500, "maximum number of occurrences to fetch"),
+					&cli.StringSliceFlag{
+						Name:    "animal",
+						Aliases: []string{"a"},
+						Usage:   "only fetch this recognised animal (repeat for several)",
+					},
 				},
 				Metadata: prompt.With(askIngest),
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -121,10 +126,19 @@ func sightingsCmd(app *app) *cli.Command {
 					if err != nil {
 						return err
 					}
+					animals := make([]species.Animal, 0, len(cmd.StringSlice("animal")))
+					for _, name := range cmd.StringSlice("animal") {
+						animal, err := species.ParseAnimal(name)
+						if err != nil {
+							return err
+						}
+						animals = append(animals, animal)
+					}
 
 					return runIngest(ctx, app, sighting.IngestRequest{
 						Limit:   cmd.Int("limit"),
 						Country: code,
+						Animals: animals,
 					})
 				},
 			},
@@ -209,7 +223,9 @@ func runIngest(ctx context.Context, app *app, opts sighting.IngestRequest) error
 		return err
 	}
 
-	opts.Animals = species.Animals()
+	if len(opts.Animals) == 0 {
+		opts.Animals = species.Animals()
+	}
 	opts.Skippers = ingestSkippers
 	opts.OnPage = func(fetched int, total int64) {
 		want := min(total, int64(opts.Limit))

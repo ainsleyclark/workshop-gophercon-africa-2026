@@ -1,27 +1,11 @@
 package pages
 
-import (
-	"workshop/internal/domain/sighting"
-	"workshop/web/views/components"
-	"workshop/web/views/layout"
-)
+import "workshop/web/views/layout"
 
-templ Home(sightings []sighting.Sighting) {
+templ Home() {
 	@layout.Base(layout.BaseProps{
-		Title: "Sightings",
+		Title: "Wildlife Atlas — Field Observations",
 	}) {
-		<h1>Sightings</h1>
-		if len(sightings) == 0 {
-			<p>No sightings have been ingested yet.</p>
-		} else {
-			<p>Total: { len(sightings) }</p>
-			<ul class="sightings">
-				for _, s := range sightings {
-					<li>
-						@components.SightingCard(s)
-					</li>
-				}
-			</ul>
-		}
+		<div id="root"></div>
 	}
 }

@@ -18,7 +18,7 @@ func webCmd(app *app) *cli.Command {
 	return &cli.Command{
 		Name:      "web",
 		Aliases:   []string{"w"},
-		Usage:     "Serve the sightings web interface",
+		Usage:     "Serve the wildlife observation interface",
 		UsageText: "workshop web [-p 8080]",
 		Flags: []cli.Flag{
 			&cli.IntFlag{
@@ -36,7 +36,7 @@ func webCmd(app *app) *cli.Command {
 			ctx, stop := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
 			defer stop()
 
-			router := web.New(app.Logger, app.Config, app.Sightings)
+			router := web.New(app.Logger, app.Config, app.Sightings, app.Species)
 
 			port := cmd.Int("port")
 			if url := cmd.String("live-reload-url"); url != "" {

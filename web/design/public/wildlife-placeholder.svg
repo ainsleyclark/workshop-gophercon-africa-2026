@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-label="Wildlife observation image unavailable">
+  <defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#22382e"/><stop offset="1" stop-color="#0b1110"/></linearGradient><radialGradient id="r"><stop stop-color="#fdb813" stop-opacity=".23"/><stop offset="1" stop-color="#fdb813" stop-opacity="0"/></radialGradient></defs>
+  <path fill="url(#g)" d="M0 0h1200v800H0z"/><path fill="url(#r)" d="M0 0h1200v800H0z"/>
+  <g fill="none" stroke="#fdb813" stroke-opacity=".5" stroke-width="2"><path d="M0 650 180 520l150 60 160-210 130 155 120-240 160 165 110-110 190 180v280H0z"/><path d="M0 690 210 575l155 68 133-165 132 143 105-200 172 167 112-89 181 147"/></g>
+  <g fill="#fdb813"><circle cx="600" cy="360" r="7"/><circle cx="600" cy="360" r="22" fill-opacity=".17"/><circle cx="600" cy="360" r="38" fill-opacity=".08"/></g>
+  <text x="600" y="745" text-anchor="middle" fill="#fff" fill-opacity=".62" font-family="system-ui,sans-serif" font-size="20" letter-spacing="6">FIELD OBSERVATION</text>
+</svg>

@@ -1,0 +1,6 @@
+{
+  "name": "The Endangered Species — National Geographic Showcase",
+  "description": "Interactive 3D documentary experience showcasing endangered wildlife with seamless automated switching, depth parallax, and conservation advocacy.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

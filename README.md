@@ -109,6 +109,10 @@ Each of `internal/{domain,clients,infra,common}` has a README saying where its l
    make web
    ```
 
+   `db seed` applies the migrations, loads the general starter sample, and separately seeds
+   Snow Leopard, Bengal Tiger, Giant Panda, and Lion observations so the showcase map has
+   real locations on a fresh database.
+
 ## During the day
 
 ```sh
