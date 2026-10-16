@@ -1,0 +1,8 @@
+{
+	"name": "Pawprint — wildlife sightings",
+	"short_name": "Pawprint",
+	"icons": [{ "src": "/assets/images/logo.svg", "sizes": "any", "type": "image/svg+xml" }],
+	"theme_color": "#D9D2C5",
+	"background_color": "#D9D2C5",
+	"display": "standalone"
+}

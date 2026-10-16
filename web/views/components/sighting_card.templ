@@ -12,31 +12,62 @@ import (
 
 templ SightingCard(s sighting.Sighting) {
 	<article class="card">
-		<!-- Header -->
-		<header class="card__header">
-			<h2>{ displayName(s.Species) }</h2>
-			if s.Species.ScientificName != "" {
-				<p class="card__scientific">{ s.Species.ScientificName }</p>
-			}
-		</header>
-		<!-- Meta -->
-		<dl class="card__meta">
-			<dt>Seen</dt>
-			<dd>{ s.HappenedAt.Format("2 January 2006") }</dd>
-			<dt>Where</dt>
-			<dd>{ place(s.Location) }</dd>
-			if s.IndividualCount != nil {
-				<dt>Count</dt>
-				<dd>{ individuals(*s.IndividualCount) }</dd>
-			}
-			if s.RecordedBy != "" {
-				<dt>Recorded by</dt>
-				<dd>{ s.RecordedBy }</dd>
-			}
-		</dl>
-		<!-- Gallery -->
-		<div class="card__gallery">
-			@Gallery(s.Media)
+		if photo, ok := Cover(s); ok {
+			<figure class="card__photo">
+				<img src={ photo.URL } alt={ altText(photo) } loading="lazy" decoding="async"/>
+				if s.Location.Country != "" {
+					<span class="card__tag">{ s.Location.Country }</span>
+				}
+				if n := photoCount(s); n > 1 {
+					<span class="card__count">{ fmt.Sprintf("%d photos", n) }</span>
+				}
+			</figure>
+		} else {
+			<div class="card__photo card__photo--empty" aria-hidden="true">
+				<svg class="icon"><use href="#i-paw"></use></svg>
+				if s.Location.Country != "" {
+					<span class="card__tag">{ s.Location.Country }</span>
+				}
+			</div>
+		}
+		<div class="card__body">
+			<header>
+				<h3 class="card__title">{ displayName(s.Species) }</h3>
+				if s.Species.ScientificName != "" {
+					<p class="card__scientific">{ s.Species.ScientificName }</p>
+				}
+			</header>
+			<dl class="card__meta">
+				<dt>Seen</dt>
+				<dd>{ s.HappenedAt.Format("2 Jan 2006") }</dd>
+				<dt>Where</dt>
+				<dd>{ place(s.Location) }</dd>
+				if s.IndividualCount != nil {
+					<dt>Count</dt>
+					<dd>{ individuals(*s.IndividualCount) }</dd>
+				}
+				if s.RecordedBy != "" {
+					<dt>By</dt>
+					<dd>{ s.RecordedBy }</dd>
+				}
+			</dl>
+			<div class="card__actions">
+				<button class="like" type="button" aria-pressed="false" aria-label={ "Like " + displayName(s.Species) } data-like>
+					<svg class="icon" aria-hidden="true"><use href="#i-heart"></use></svg>
+				</button>
+				<div class="rating" role="group" aria-label="Rate this sighting" data-rating>
+					for i := 1; i <= 5; i++ {
+						<button type="button" aria-pressed="false" aria-label={ stars(i) } value={ fmt.Sprint(i) }>
+							<svg class="icon" aria-hidden="true"><use href="#i-star"></use></svg>
+						</button>
+					}
+				</div>
+				<button class="pill pill--soft pill--small" type="button" data-similar>
+					<svg class="icon" aria-hidden="true"><use href="#i-similar"></use></svg>
+					Similar
+				</button>
+			</div>
+			<a class="card__link" href={ gbifURL(s) } rel="noopener">View on GBIF <svg class="icon" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
 		</div>
 	</article>
 }
@@ -62,4 +93,12 @@ func individuals(n int) string {
 		return "1 individual"
 	}
 	return fmt.Sprintf("%d individuals", n)
+}
+
+// stars labels a rating button.
+func stars(n int) string {
+	if n == 1 {
+		return "1 star"
+	}
+	return fmt.Sprintf("%d stars", n)
 }
