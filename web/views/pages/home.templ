@@ -1,6 +1,11 @@
 package pages
 
 import (
+	"cmp"
+	"fmt"
+	"slices"
+	"strings"
+
 	"workshop/internal/domain/sighting"
 	"workshop/web/views/components"
 	"workshop/web/views/layout"
@@ -10,12 +15,9 @@ templ Home(sightings []sighting.Sighting) {
 	@layout.Base(layout.BaseProps{
 		Title: "Sightings",
 	}) {
-		<h1>Sightings</h1>
-		if len(sightings) == 0 {
-			<p>No sightings have been ingested yet.</p>
-		} else {
-			<p>Total: { len(sightings) }</p>
-			<ul class="sightings">
+		@homeHero(sightings)
+		if len(sightings) > 0 {
+			<ul class="sightings" id="sightings">
 				for _, s := range sightings {
 					<li>
 						@components.SightingCard(s)
@@ -24,4 +26,73 @@ templ Home(sightings []sighting.Sighting) {
 			</ul>
 		}
 	}
+}
+
+// homeHero opens the page: title, total, and the first sighting as the
+// featured one.
+templ homeHero(sightings []sighting.Sighting) {
+	<header class="hero">
+		<div class="hero__lead">
+			<span class="hero__pill">Species records from GBIF</span>
+			<h1 class="hero__title">Sightings</h1>
+			if len(sightings) == 0 {
+				<p class="hero__empty">No sightings have been ingested yet.</p>
+			} else {
+				<div class="hero__actions">
+					<a class="hero__cta" href="#sightings">
+						Browse sightings
+						<svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+							<path d="M8 2v11M3 9l5 5 5-5"></path>
+						</svg>
+					</a>
+					<p class="hero__total">
+						<span>Total</span>
+						<strong>{ len(sightings) }</strong>
+					</p>
+				</div>
+			}
+		</div>
+		if len(sightings) > 0 {
+			<div class="hero__feature">
+				<div class="hero__frame">
+					<span class="hero__tag">Featured</span>
+					@components.Gallery(sightings[0].Media)
+					<div class="hero__caption">
+						<p class="hero__name">{ heroName(sightings[0]) }</p>
+						if sightings[0].Species.ScientificName != "" {
+							<p class="hero__scientific">{ sightings[0].Species.ScientificName }</p>
+						}
+					</div>
+				</div>
+				<p class="hero__chip hero__chip--date">{ sightings[0].HappenedAt.Format("2 January 2006") }</p>
+				<p class="hero__chip hero__chip--place">{ heroPlace(sightings[0].Location) }</p>
+				if sightings[0].IndividualCount != nil {
+					<p class="hero__chip hero__chip--count">{ heroCount(*sightings[0].IndividualCount) }</p>
+				}
+			</div>
+		}
+	</header>
+}
+
+// heroName mirrors the card's name fallback (components.displayName is
+// unexported, so the hero keeps its own copy).
+func heroName(s sighting.Sighting) string {
+	return cmp.Or(s.Species.VernacularName, s.Species.CanonicalName, s.Species.ScientificName, "Unknown species")
+}
+
+// heroPlace joins whichever parts of the location GBIF supplied.
+func heroPlace(l sighting.Location) string {
+	parts := slices.DeleteFunc(
+		[]string{l.Locality, l.StateProvince, l.Country},
+		func(s string) bool { return s == "" },
+	)
+	return cmp.Or(strings.Join(parts, ", "), "Location unknown")
+}
+
+// heroCount renders how many animals were seen in the featured sighting.
+func heroCount(n int) string {
+	if n == 1 {
+		return "1 individual"
+	}
+	return fmt.Sprintf("%d individuals", n)
 }
